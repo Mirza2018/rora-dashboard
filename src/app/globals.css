@@ -1,0 +1,232 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+
+  /* Base surfaces */
+  --background: #0a0a0b;
+  --foreground: #bfbfbf;
+
+  /* Sidebar / topbar */
+  --sidebar: #16181c;
+  --sidebar-foreground: #bfbfbf;
+  --sidebar-accent: #2f80ed;
+  --sidebar-accent-foreground: #eaeaea;
+  --sidebar-border: #282a2e;
+
+  /* Titles */
+  --title: #2f80ed;
+
+  /* Cards */
+  --card: #16181c;
+  --card-foreground: #bfbfbf;
+  --card-border: #414144;
+
+  /* Table */
+  --table: #16181c;
+  --table-border: #414144;
+  --table-foreground: #eaeaea;
+
+  /* Filter dropdown */
+  --filter: #0a0a0b;
+  --filter-border: #414144;
+  --filter-foreground: #bfbfbf;
+
+  /* Status */
+  --status-complete: #10b981;
+  --status-active: #3b82f6;
+  --status-pending: #ffb547;
+  --status-failed: #ff5c5c;
+  --status-suspended: #f97316;
+  --status-blocked: #b91c1c;
+  --status-open: #0ea5e9;
+  --status-resolved: #22c55e;
+  --status-rejected: #e11d48;
+  --status-paid: #16a34a;
+  --status-delivered: #14b8a6;
+
+  /* Inputs */
+  --input: #0a0a0b;
+  --input-foreground: #ffffff;
+  --input-border: #282a2e;
+
+  /* Buttons */
+  --primary: #2f80ed;
+  --primary-foreground: #ffffff;
+  --cancel: #0a0a0b;
+  --cancel-foreground: #c8cad4;
+  --cancel-border: #414144;
+
+  /* Popover / muted / misc, derived to stay consistent with the palette */
+  --popover: #16181c;
+  --popover-foreground: #bfbfbf;
+  --muted: #16181c;
+  --muted-foreground: #8a8d93;
+  --accent: #2f80ed;
+  --accent-foreground: #eaeaea;
+  --destructive: #ff5c5c;
+  --destructive-foreground: #ffffff;
+  --border: #282a2e;
+  --ring: #2f80ed;
+
+  /* Charts */
+  --chart-area-from: #212d50;
+  --chart-area-to: #16191f;
+  --chart-bar-1: #2f80ed;
+  --chart-bar-2: #27c281;
+  --chart-1: #2f80ed;
+  --chart-2: #27c281;
+  --chart-3: #10b981;
+  --chart-4: #ffb547;
+  --chart-5: #ff5c5c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+
+  --color-title: var(--title);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-border: var(--card-border);
+
+  --color-table: var(--table);
+  --color-table-foreground: var(--table-foreground);
+  --color-table-border: var(--table-border);
+
+  --color-filter: var(--filter);
+  --color-filter-foreground: var(--filter-foreground);
+  --color-filter-border: var(--filter-border);
+
+  --color-status-complete: var(--status-complete);
+  --color-status-active: var(--status-active);
+  --color-status-pending: var(--status-pending);
+  --color-status-failed: var(--status-failed);
+  --color-status-suspended: var(--status-suspended);
+  --color-status-blocked: var(--status-blocked);
+  --color-status-open: var(--status-open);
+  --color-status-resolved: var(--status-resolved);
+  --color-status-rejected: var(--status-rejected);
+  --color-status-paid: var(--status-paid);
+  --color-status-delivered: var(--status-delivered);
+
+  --color-input: var(--input);
+  --color-input-foreground: var(--input-foreground);
+  --color-input-border: var(--input-border);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-cancel: var(--cancel);
+  --color-cancel-foreground: var(--cancel-foreground);
+  --color-cancel-border: var(--cancel-border);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  --color-chart-area-from: var(--chart-area-from);
+  --color-chart-area-to: var(--chart-area-to);
+  --color-chart-bar-1: var(--chart-bar-1);
+  --color-chart-bar-2: var(--chart-bar-2);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+::-webkit-scrollbar {
+  width: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #2f80ed;
+  border-radius: 16px;
+  border: 3px solid #16181c;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #2f80ed;
+}
+
+/*Header  */
+
+.ql-toolbar.ql-snow {
+  background: #16181c;
+  border: 1px solid #414144 !important;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Container box */
+.ql-container.ql-snow {
+  background: #16181c;
+  border: 1px solid #414144 !important;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Content */
+.ql-editor {
+  min-height: 300px;
+  color: #ffffff;
+}
+
+.ql-editor.ql-blank::before {
+  color: #9ca3af !important;
+}
+/* Icons */
+.ql-snow .ql-stroke {
+  stroke: #eaeaea !important;
+}
+
+/* icons fill */
+.ql-snow .ql-fill {
+  fill: #eaeaea !important;
+}
+/* Icons picker */
+.ql-snow .ql-picker {
+  color: #2f80ed !important;
+}
+/* Active icons big area*/
+
+.ql-toolbar button.ql-active {
+  background: #2f80ed !important;
+  border-radius: 6px;
+}
+/* Active icons svg area*/
+.ql-toolbar button.ql-active svg {
+  /* background: #0f4b99 !important; */
+  /* border-radius: 5; */
+}
