@@ -35,7 +35,7 @@ type Call = {
   phone: string;
   city: string;
   status: "active" | "suspended" | "pending";
-  kyc: "verified" | "Pending";
+  kyc: "verified" | "pending";
   calls: string;
   earning: string;
   joined: string;
@@ -43,7 +43,7 @@ type Call = {
 
 const ALL_CUSTOMERS: Call[] = Array.from({ length: 47 }).map((_, i) => {
   const statuses: Call["status"][] = ["active", "suspended", "pending"];
-  const kyces: Call["kyc"][] = ["verified", "Pending"];
+  const kyces: Call["kyc"][] = ["verified", "pending"];
   return {
     id: `OP-${1000 + i}`,
     name: [
@@ -143,7 +143,11 @@ const OperatorsTable = () => {
         <StatusBadge status={row.status}>{row.status}</StatusBadge>
       ),
     },
-    { key: "kyc", header: "KYC" },
+    {
+      key: "kyc",
+      header: "KYC",
+      render: (row) => <StatusBadge status={row.kyc}>{row.kyc}</StatusBadge>,
+    },
     { key: "calls", header: "Calls" },
     {
       key: "earning",
