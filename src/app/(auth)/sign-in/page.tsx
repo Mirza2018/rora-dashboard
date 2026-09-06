@@ -1,50 +1,85 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { toast } from "sonner"
-import { Mail } from "lucide-react"
-import Link from "next/link"
-import { FormField } from "@/components/ui/form-field"
-import { Button } from "@/components/ui/button"
-import { AuthLayout } from "@/components/layout/auth-layout"
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import { Phone } from "lucide-react";
+import Link from "next/link";
+import { FormField } from "@/components/ui/form-field";
+import { Button } from "@/components/ui/button";
+import { AuthLayout } from "@/components/layout/auth-layout";
+import { useUserLoginMutation } from "@/redux/api/authApi";
+import { useDispatch } from "react-redux";
+import Cookies from "universal-cookie";
+import { setAccessToken, setUserInfo } from "@/redux/slices/authSlice";
 
 const schema = z.object({
-  email: z.string().min(1, "Email is required").email("Enter a valid email address"),
+  phone: z.string().min(5, "Phone number is required"),
   password: z.string().min(1, "Password is required"),
   remember: z.boolean().optional(),
-})
+});
 
-type Values = z.infer<typeof schema>
+type Values = z.infer<typeof schema>;
 
 export default function SignInPage() {
-  const router = useRouter()
+  const [userLogin] = useUserLoginMutation();
+    const dispatch = useDispatch();
+    const cookies = new Cookies();
+  const router = useRouter();
   const {
     control,
     handleSubmit,
     formState: { isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", remember: false },
-  })
+    defaultValues: { phone: "", password: "", remember: false },
+  });
 
   async function onSubmit(values: Values) {
-    try {
-      // Replace with your real sign-in API call.
-      await new Promise((resolve) => setTimeout(resolve, 900))
-      console.log("sign-in values:", values)
-      toast.success("Signed in successfully!")
-      router.push("/dashboard/overview");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Sign in failed. Please try again.")
-    }
+    console.log(values);
+    const toastId = toast.loading("Logging in...");
+    const loginData = {
+      phone: values.phone,
+      password: values.password,
+    };
+
+    // return;
+   try {
+     const res = await userLogin(loginData).unwrap();
+
+     dispatch(setAccessToken(res?.data?.accessToken));
+     dispatch(setUserInfo(res?.data?.admin));
+     cookies.set("rora_dashboard_accessToken", res?.data?.accessToken);
+     toast.success(res.message || "Login successful", {
+       id: toastId,
+       duration: 2000,
+     });
+
+     if (res?.data?.role !== "SUPER_ADMIN") {
+       return toast.warning("Please use admin Email to login Dashboard", {
+         id: toastId,
+         duration: 2000,
+       });
+     }
+
+     router.push("/dashboard/overview");
+    //  setIsLoading(false);
+   } catch (error: any) {
+     toast.error(
+       error?.data?.message || error?.error || "An error occurred during Login",
+       {
+         id: toastId,
+         duration: 2000,
+       },
+     );
+   }
   }
 
   function onInvalid() {
-    toast.error("Please fix the highlighted fields.")
+    toast.error("Please fix the highlighted fields.");
   }
 
   return (
@@ -54,14 +89,18 @@ export default function SignInPage() {
         Enter your credentials to access the admin dashboard
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="mt-5 space-y-4" noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit, onInvalid)}
+        className="mt-5 space-y-4"
+        noValidate
+      >
         <FormField
           control={control}
-          name="email"
-          type="email"
-          label="Email Address"
-          placeholder="admin@yatos.com"
-          icon={Mail}
+          name="phone"
+          type="phone"
+          label="Phone"
+          placeholder="+123 456 789"
+          icon={Phone}
         />
         <FormField
           control={control}
@@ -72,8 +111,16 @@ export default function SignInPage() {
         />
 
         <div className="flex items-center justify-between">
-          <FormField control={control} name="remember" type="checkbox" checkboxLabel="Remember me" />
-          <Link href="/forgot-password" className="text-sm font-medium text-title hover:underline">
+          <FormField
+            control={control}
+            name="remember"
+            type="checkbox"
+            checkboxLabel="Remember me"
+          />
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-title hover:underline"
+          >
             Forgot password?
           </Link>
         </div>
@@ -83,5 +130,5 @@ export default function SignInPage() {
         </Button>
       </form>
     </AuthLayout>
-  )
+  );
 }

@@ -11,38 +11,34 @@ import {
   YAxis,
 } from "recharts";
 
-const data = [
-  { day: "Sat", call: 22 },
-  { day: "Sun", call: 15 },
-  { day: "Mon", call: 24 },
-  { day: "Tue", call: 32 },
-  { day: "Wed", call: 18 },
-  { day: "Thu", call: 41 },
-  { day: "Fri", call: 36 },
-];
+export type CallsByStatusPoint = {
+  dayOfWeek: number; // MongoDB $dayOfWeek convention: 1 = Sunday ... 7 = Saturday
+  count: number;
+};
 
-export function VerticalBarChart() {
+type VerticalBarChartProps = {
+  data: CallsByStatusPoint[];
+};
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+export function VerticalBarChart({ data }: VerticalBarChartProps) {
+  const chartData = data.map((point) => ({
+    day: DAY_LABELS[(point.dayOfWeek - 1 + 7) % 7],
+    call: point.count,
+  }));
+
   return (
     <ResponsiveContainer width="100%" height={320}>
       <BarChart
         barSize={20}
         layout="vertical"
-        data={data}
-        // width={500}
-        // height={500}
+        data={chartData}
         margin={{ top: 1, right: 1, left: 0, bottom: 0 }}
       >
-        {/* <XAxis
-          dataKey="day"
-          stroke="var(--muted-foreground)"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-        /> */}
         <XAxis
           type="number"
           stroke="white"
-          // tick={{ fill: "white" }}
           fontSize={10}
           tick={{ fill: "#fff" }}
           tickLine={false}
@@ -52,12 +48,7 @@ export function VerticalBarChart() {
           dataKey="day"
           type="category"
           stroke="var(--muted-foreground)"
-          // fontSize={12}
-          tick={{
-            fill: "#fff",
-            fontSize: 12,
-            fontWeight: 400,
-          }}
+          tick={{ fill: "#fff", fontSize: 12, fontWeight: 400 }}
           tickLine={false}
           axisLine={false}
         />
@@ -78,7 +69,7 @@ export function VerticalBarChart() {
             fill="var(--primary)"
           />
         </Bar>
-        <CartesianGrid stroke="#E0E0E0" horizontal={false} vertical={true} />
+        <CartesianGrid stroke="#E0E0E0" horizontal={false} vertical />
       </BarChart>
     </ResponsiveContainer>
   );

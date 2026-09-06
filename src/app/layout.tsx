@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { NotificationsProvider } from "@/lib/notifications-store";
+import ClientLayout from "./ClientLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "RORA",
-  description:
-    "Dashboard starter built with Next.js, Tailwind CSS and shadcn/ui",
+  description: "Made my Takibul hasan",
 };
 
 export default function RootLayout({
@@ -47,7 +47,9 @@ export default function RootLayout({
             },
           }}
         />
-        <NotificationsProvider>{children}</NotificationsProvider>
+        <ClientLayout>
+          <NotificationsProvider>{children}</NotificationsProvider>
+        </ClientLayout>
       </body>
     </html>
   );
