@@ -1,49 +1,79 @@
-import { CheckCircle2, Clock, Download, XCircle } from "lucide-react";
+"use client";
+
+import { Download } from "lucide-react";
 
 import CallsTable from "@/components/calls_page/calls_table";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-
-const ROWS = [
-  {
-    id: "TXN-0231",
-    customer: "Marcus Lee",
-    amount: "$482.00",
-    status: "complete" as const,
-  },
-  {
-    id: "TXN-0230",
-    customer: "Aria Chen",
-    amount: "$129.50",
-    status: "pending" as const,
-  },
-  {
-    id: "TXN-0229",
-    customer: "Sofia Ruiz",
-    amount: "$88.20",
-    status: "failed" as const,
-  },
-  {
-    id: "TXN-0228",
-    customer: "Devon Park",
-    amount: "$964.00",
-    status: "suspend" as const,
-  },
-];
-
-const STATUS_ICON = {
-  complete: CheckCircle2,
-  pending: Clock,
-  failed: XCircle,
-  suspend: XCircle,
-};
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useGetCallStatQuery,
+  useLazyGetCallsQuery,
+} from "@/redux/api/adminApi"; // adjust to your actual path
 
 const CallPage = () => {
+  const {
+    data: statsResponse,
+    isLoading,
+    isFetching,
+  } = useGetCallStatQuery(undefined);
+  const [triggerGetCalls, { isFetching: isExporting }] = useLazyGetCallsQuery();
+
+  const loading = isLoading || isFetching;
+  const stats = statsResponse?.data;
+
+  const escapeCsv = (val: string | number) => {
+    const str = String(val);
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+
+  const handleExport = async () => {
+    try {
+      const res = await triggerGetCalls({ page: 1, limit: 1000 }).unwrap();
+      const calls = res?.data?.calls ?? [];
+
+      const rows: string[] = [];
+      rows.push(
+        "Call Ref,Date,Customer,Operator,Destination,Number Dialed,Minutes,Charged,Status,Failure Reason",
+      );
+      calls.forEach((c: any) => {
+        rows.push(
+          [
+            c.callRef,
+            c.createdAt,
+            escapeCsv(c.customerId?.name ?? ""),
+            escapeCsv(c.operatorId?.name ?? ""),
+            escapeCsv(c.destinationId?.name ?? ""),
+            c.numberDialed,
+            c.minutesUsed ?? 0,
+            c.costMoney ?? 0,
+            c.status,
+            c.failureReason ?? "",
+          ].join(","),
+        );
+      });
+
+      const blob = new Blob([rows.join("\n")], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `calls-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to export calls", err);
+    }
+  };
+
   return (
     <main className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -54,10 +84,9 @@ const CallPage = () => {
           </p>
         </div>
         <div className="flex gap-3">
-
-          <Button>
+          <Button onClick={handleExport} disabled={isExporting}>
             <Download className="size-4" />
-            Export
+            {isExporting ? "Exporting..." : "Export"}
           </Button>
         </div>
       </div>
@@ -67,19 +96,37 @@ const CallPage = () => {
         <Card>
           <CardHeader>
             <CardDescription>Completed today</CardDescription>
-            <CardTitle className="text-2xl">1,180</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                {(stats?.completedToday ?? 0).toLocaleString()}
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Failed today</CardDescription>
-            <CardTitle className="text-2xl">70</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                {(stats?.failedToday ?? 0).toLocaleString()}
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Avg duration</CardDescription>
-            <CardTitle className="text-2xl">6.4 min</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                {(stats?.avgDurationMinutes ?? 0).toFixed(1)} min
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
       </div>

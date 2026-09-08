@@ -7,17 +7,66 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useFloatingPosition } from "@/lib/use-floating-position";
 import { Portal } from "@/components/ui/portal";
-import { useNotifications } from "@/lib/notifications-store";
 import { formatRelativeTime } from "@/lib/format-relative-time";
+import { useGetNotificationsQuery } from "@/redux/api/adminApi"; // adjust to your actual path
+
+const SEEN_STORAGE_KEY = "admin-notifications-seen-ids";
+const POLL_INTERVAL_MS = 30_000;
+
+const readSeenIds = (): Set<string> => {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.localStorage.getItem(SEEN_STORAGE_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+};
+
+const writeSeenIds = (ids: Set<string>) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SEEN_STORAGE_KEY, JSON.stringify([...ids]));
+  } catch {
+    // ignore storage failures (e.g. private browsing)
+  }
+};
 
 export function NotificationBell() {
-  const { notifications, unreadCount, markAllAsRead } = useNotifications();
   const [open, setOpen] = React.useState(false);
+  const [seenIds, setSeenIds] = React.useState<Set<string>>(() => new Set());
+
   const { triggerRef, panelRef, style } = useFloatingPosition(open, {
     matchWidth: false,
     align: "end",
     gap: 10,
   });
+
+  const { data: response } = useGetNotificationsQuery(
+    { page: 1, limit: 6 },
+    { pollingInterval: POLL_INTERVAL_MS },
+  );
+
+  const recent = response?.data?.notifications ?? [];
+
+  // Load seen ids from storage once on mount (client only).
+  React.useEffect(() => {
+    setSeenIds(readSeenIds());
+  }, []);
+
+  const unreadCount = React.useMemo(
+    () => recent.filter((n) => !seenIds.has(n._id)).length,
+    [recent, seenIds],
+  );
+
+  const markAllAsRead = React.useCallback(() => {
+    setSeenIds((prev) => {
+      const next = new Set(prev);
+      recent.forEach((n) => next.add(n._id));
+      writeSeenIds(next);
+      return next;
+    });
+  }, [recent]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -47,7 +96,6 @@ export function NotificationBell() {
       markAllAsRead();
     }
   }, [open, markAllAsRead]);
-  const recent = notifications.slice(0, 6);
 
   return (
     <>
@@ -88,13 +136,13 @@ export function NotificationBell() {
               ) : (
                 recent.map((n) => (
                   <div
-                    key={n.id}
+                    key={n._id}
                     className="border-card-border flex gap-3 border-b px-4 py-3 last:border-0 hover:bg-white/[0.03]"
                   >
                     <span
                       className={cn(
                         "mt-1.5 size-2 shrink-0 rounded-full",
-                        !n.read && "bg-primary",
+                        !seenIds.has(n._id) && "bg-primary",
                       )}
                     />
                     <div className="min-w-0 flex-1">
@@ -102,7 +150,7 @@ export function NotificationBell() {
                         {n.title}
                       </p>
                       <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">
-                        {n.description}
+                        {n.message}
                       </p>
                       <p className="text-muted-foreground/70 mt-1 text-xs">
                         {formatRelativeTime(n.createdAt)}
@@ -114,7 +162,7 @@ export function NotificationBell() {
             </div>
 
             <Link
-              href="/dashboard/notifications"
+              href="/dashboard/notification"
               onClick={() => setOpen(false)}
               className="border-card-border text-title border-t px-4 py-2.5 text-center text-sm font-medium hover:bg-white/5"
             >

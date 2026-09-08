@@ -1,49 +1,78 @@
-import { CheckCircle2, Clock, Download, XCircle } from "lucide-react";
+"use client";
+
+import { Download } from "lucide-react";
+import { useState } from "react";
 
 import PayoutsTable from "@/components/payouts_page/payouts_table";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useGetPayoutStarQuery,
+  useLazyGetAllPayoutQuery,
+} from "@/redux/api/adminApi"; // adjust to your actual path
 
-const ROWS = [
-  {
-    id: "TXN-0231",
-    customer: "Marcus Lee",
-    amount: "$482.00",
-    status: "complete" as const,
-  },
-  {
-    id: "TXN-0230",
-    customer: "Aria Chen",
-    amount: "$129.50",
-    status: "pending" as const,
-  },
-  {
-    id: "TXN-0229",
-    customer: "Sofia Ruiz",
-    amount: "$88.20",
-    status: "failed" as const,
-  },
-  {
-    id: "TXN-0228",
-    customer: "Devon Park",
-    amount: "$964.00",
-    status: "suspend" as const,
-  },
-];
+const PayoutsPage = () => {
+  const {
+    data: statsResponse,
+    isLoading,
+    isFetching,
+  } = useGetPayoutStarQuery(undefined);
+  const [triggerGetAllPayout, { isFetching: isExporting }] =
+    useLazyGetAllPayoutQuery();
 
-const STATUS_ICON = {
-  complete: CheckCircle2,
-  pending: Clock,
-  failed: XCircle,
-  suspend: XCircle,
-};
+  const loading = isLoading || isFetching;
+  const stats = statsResponse?.data;
 
-const CallPage = () => {
+  const escapeCsv = (val: string | number) => {
+    const str = String(val);
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+
+  const handleExport = async () => {
+    try {
+      // Pull a large page to cover the full payout list for export.
+      const res = await triggerGetAllPayout({ page: 1, limit: 1000 }).unwrap();
+      const payouts = res?.data?.payouts ?? [];
+
+      const rows: string[] = [];
+      rows.push("Payout Ref,Operator,Amount,Method,Bank,Account,Status,Date");
+      payouts.forEach((p: any) => {
+        rows.push(
+          [
+            p.payoutRef,
+            escapeCsv(p.operatorId?.name ?? ""),
+            p.amountMoney,
+            p.method,
+            escapeCsv(p.bankName ?? ""),
+            p.accountNumber ?? "",
+            p.status,
+            p.createdAt,
+          ].join(","),
+        );
+      });
+
+      const blob = new Blob([rows.join("\n")], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `payouts-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to export payouts", err);
+    }
+  };
+
   return (
     <main className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -54,9 +83,9 @@ const CallPage = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button>
+          <Button onClick={handleExport} disabled={isExporting}>
             <Download className="size-4" />
-            Export
+            {isExporting ? "Exporting..." : "Export"}
           </Button>
         </div>
       </div>
@@ -66,19 +95,40 @@ const CallPage = () => {
         <Card>
           <CardHeader>
             <CardDescription>Pending</CardDescription>
-            <CardTitle className="text-2xl">AED 41,260</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-32 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                AED {(stats?.pending?.amount ?? 0).toLocaleString()}
+                <span className="text-sm text-muted-foreground font-normal ml-1">
+                  ({stats?.pending?.count ?? 0})
+                </span>
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Paid MTD</CardDescription>
-            <CardTitle className="text-2xl">AED 184,720</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-32 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                AED {(stats?.paidMtd ?? 0).toLocaleString()}
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Rejected</CardDescription>
-            <CardTitle className="text-2xl">AED 2,210</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-32 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                AED {(stats?.rejected ?? 0).toLocaleString()}
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
       </div>
@@ -87,4 +137,4 @@ const CallPage = () => {
   );
 };
 
-export default CallPage;
+export default PayoutsPage;

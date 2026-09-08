@@ -52,8 +52,8 @@ const ALL_CUSTOMERS: Call[] = Array.from({ length: 47 }).map((_, i) => {
     ][i % 8],
     destination: `+1 234 567 890${i % 9}`,
     duration: `${i % 6} min ${i % 9} sec`,
-    charged: `AED ${i % 9+1}`,
-    min: `${i % 9+1}`,
+    charged: `AED ${(i % 9) + 1}`,
+    min: `${(i % 9) + 1}`,
     // email: `user${i}@company.com`,
     plan: plans[i % plans.length],
     status: statuses[i % statuses.length],
@@ -117,43 +117,6 @@ const CallsTable = () => {
         <StatusBadge status={row.status}>{row.status}</StatusBadge>
       ),
     },
-    // {
-    //   key: "name",
-    //   header: "Customer",
-    //   render: (row) => (
-    //     <div>
-    //       <p className="font-medium text-table-foreground">{row.name}</p>
-    //       <p className="text-xs text-muted-foreground">{row.email}</p>
-    //     </div>
-    //   ),
-    // },
-
-    // {
-    //   key: "actions",
-    //   header: "",
-    //   align: "right",
-    //   render: (row) => (
-    //     <div className="flex justify-end gap-1">
-    //       <button
-    //         onClick={() => setViewRow(row)}
-    //         className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-white/5"
-    //         aria-label="View details"
-    //       >
-    //         <Eye className="size-4" />
-    //       </button>
-    //       <button className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-white/5">
-    //         <Pencil className="size-4" />
-    //       </button>
-    //       <button
-    //         onClick={() => setDeleteRow(row)}
-    //         className="p-1.5 rounded-md text-muted-foreground hover:text-status-failed hover:bg-white/5"
-    //         aria-label="Delete"
-    //       >
-    //         <Trash2 className="size-4" />
-    //       </button>
-    //     </div>
-    //   ),
-    // },
   ];
   return (
     <>
@@ -180,16 +143,6 @@ const CallsTable = () => {
                 { label: "Complete", value: "complete" },
                 { label: "Failed", value: "failed" },
                 { label: "Pending", value: "pending" },
-              ],
-            },
-            {
-              key: "days",
-              placeholder: "Days",
-              value: planFilter,
-              options: [
-                { label: "90 days", value: "Starter" },
-                { label: "30 days", value: "Pro" },
-                { label: "10 days", value: "Enterprise" },
               ],
             },
           ]}

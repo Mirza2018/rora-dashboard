@@ -1,61 +1,54 @@
 "use client";
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+
+import React from "react";
 
 import NotificationTable from "@/components/notification_page/notification_table";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardDescription,
-  CardHeader
-} from "@/components/ui/card";
-import {
-  Field,
-  FieldContent,
-  FieldLabel,
-  FieldTitle
-} from "@/components/ui/field";
+import { Card, CardDescription, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import React from "react";
+import { useCreateNotificationMutation } from "@/redux/api/adminApi"; // adjust to your actual path
 
-const ROWS = [
-  {
-    id: "TXN-0231",
-    customer: "Marcus Lee",
-    amount: "$482.00",
-    status: "complete" as const,
-  },
-  {
-    id: "TXN-0230",
-    customer: "Aria Chen",
-    amount: "$129.50",
-    status: "pending" as const,
-  },
-  {
-    id: "TXN-0229",
-    customer: "Sofia Ruiz",
-    amount: "$88.20",
-    status: "failed" as const,
-  },
-  {
-    id: "TXN-0228",
-    customer: "Devon Park",
-    amount: "$964.00",
-    status: "suspend" as const,
-  },
-];
+const NotificationPage = () => {
+  const [title, setTitle] = React.useState("");
+  const [message, setMessage] = React.useState("");
+  const [audience, setAudience] = React.useState("all");
+  const [error, setError] = React.useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = React.useState<string | null>(null);
 
-const STATUS_ICON = {
-  complete: CheckCircle2,
-  pending: Clock,
-  failed: XCircle,
-  suspend: XCircle,
-};
+  const [createNotification, { isLoading: isSending }] =
+    useCreateNotificationMutation();
 
-const CallPage = () => {
-  const [value, setValue] = React.useState("all");
+  const handleSend = async () => {
+    setError(null);
+    setSuccessMsg(null);
+
+    if (!title.trim() || !message.trim()) {
+      setError("Please fill in both the title and the message.");
+      return;
+    }
+
+    try {
+      const res = await createNotification({
+        title: title.trim(),
+        message: message.trim(),
+        audience,
+      }).unwrap();
+
+      setSuccessMsg(
+        `Notification "${res.data.title}" queued for ${res.data.audience}.`,
+      );
+      setTitle("");
+      setMessage("");
+      setAudience("all");
+    } catch (err) {
+      console.error("Failed to send notification", err);
+      setError("Something went wrong while sending. Please try again.");
+    }
+  };
+
   return (
     <main className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -68,7 +61,6 @@ const CallPage = () => {
       </div>
       <Card>
         <CardHeader>
-          {/* <CardTitle className="text-2xl">0</CardTitle> */}
           <CardDescription>
             <div className="space-y-6">
               <div className="">
@@ -79,6 +71,9 @@ const CallPage = () => {
                   id="title"
                   className="mt-2"
                   placeholder="Enter notification title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={isSending}
                 />
               </div>
               <div className="">
@@ -90,6 +85,9 @@ const CallPage = () => {
                   rows={6}
                   id="message"
                   placeholder="Write your notification message here"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  disabled={isSending}
                 />
               </div>
               <Label htmlFor="userOption" className="text-xs font-medium">
@@ -97,79 +95,38 @@ const CallPage = () => {
               </Label>
               <RadioGroup
                 orientation="horizontal"
-                className=""
                 itemClassName="px-4 py-2 rounded-md text-white text-sm bg-black"
                 selectedItemClassName="border border-primary!"
                 options={[
-                  {
-                    value: "all",
-                    label: "All Users",
-                  },
-                  {
-                    value: "operators",
-                    label: "Operators",
-                  },
-                  {
-                    value: "customers",
-                    label: "Customers",
-                  },
+                  { value: "all", label: "All Users" },
+                  { value: "operators", label: "Operators" },
+                  { value: "customers", label: "Customers" },
                 ]}
-                value={value ?? null}
-                onValueChange={setValue}
-                // disabled={disabled}
+                value={audience ?? null}
+                onValueChange={setAudience}
+                disabled={isSending}
               />
+
+              {error && <p className="text-sm text-status-failed">{error}</p>}
+              {successMsg && (
+                <p className="text-sm text-status-success">{successMsg}</p>
+              )}
             </div>
           </CardDescription>
         </CardHeader>
       </Card>
-      <Button variant={"default"} className="w-full">
-        Send Notification
+      <Button
+        variant={"default"}
+        className="w-full"
+        onClick={handleSend}
+        disabled={isSending}
+      >
+        {isSending ? "Sending..." : "Send Notification"}
       </Button>
-      {/* Stat cards */}
+
       <NotificationTable />
     </main>
   );
 };
 
-export default CallPage;
-
-
-
-
-              
-              // <RadioGroup defaultValue="plus" className="flex ">
-              //   <FieldLabel htmlFor="plus-plan">
-              //     <Field orientation="horizontal">
-              //       <FieldContent>
-              //         <FieldTitle>All Users</FieldTitle>
-              //         {/* <FieldDescription>
-              //           For individuals and small teams.
-              //         </FieldDescription> */}
-              //       </FieldContent>
-              //       <RadioGroupItem value="plus" id="plus-plan" />
-              //     </Field>
-              //   </FieldLabel>
-              //   <FieldLabel htmlFor="pro-plan">
-              //     <Field orientation="horizontal">
-              //       <FieldContent>
-              //         <FieldTitle>Operators</FieldTitle>
-              //         {/* <FieldDescription>
-              //           For growing businesses.
-              //         </FieldDescription> */}
-              //       </FieldContent>
-              //       <RadioGroupItem value="pro" id="pro-plan" />
-              //     </Field>
-              //   </FieldLabel>
-              //   <FieldLabel htmlFor="enterprise-plan">
-              //     <Field orientation="horizontal">
-              //       <FieldContent>
-              //         <FieldTitle>Customers</FieldTitle>
-              //         {/* <FieldDescription>
-              //           For large teams and enterprises.
-              //         </FieldDescription> */}
-              //       </FieldContent>
-              //       <RadioGroupItem value="enterprise" id="enterprise-plan" />
-              //     </Field>
-              //   </FieldLabel>
-              // </RadioGroup>;
-
+export default NotificationPage;

@@ -201,7 +201,7 @@ const CallPage = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-[320px] w-full" />
+              <Skeleton className="h-80 w-full" />
             ) : (
               <>
                 <AreaRechart data={revenueTrend} />
@@ -219,7 +219,7 @@ const CallPage = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-[320px] w-full" />
+              <Skeleton className="h-80 w-full" />
             ) : (
               <VerticalBarChart data={callsByStatusWeekly} />
             )}

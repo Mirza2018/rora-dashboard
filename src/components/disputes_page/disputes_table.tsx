@@ -1,114 +1,154 @@
 "use client";
 
-import { Banknote, Eye, Pencil, SearchX, Trash2 } from "lucide-react";
+import { SearchX } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardDescription, CardHeader } from "../ui/card";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import {
+  useGetAllDisputesQuery,
+  useResolveDisputeMutation,
+  useRejectDisputeMutation,
+} from "@/redux/api/adminApi"; // adjust to your actual path
 
-// ── Your data type ───────────────────────────────────────────
-type Call = {
-  id: string;
-  dispute_id: string;
-  name: string;
-  operator: string;
-  charged: string;
+// ── API-shaped dispute type ─────────────────────────────────
+type Dispute = {
+  _id: string;
+  disputeRef: string;
+  callId: { _id: string; callRef: string };
+  customerId: { _id: string; name: string; phone: string };
+  operatorId: { _id: string; name: string; phone: string };
+  amount: number;
   reason: string;
-  status: "open" | "resolved" | "rejected";
-  joined: string;
+  status: "open" | "resolved" | "reject";
+  createdAt: string;
 };
- 
-const ALL_CUSTOMERS: Call[] = Array.from({ length: 47 }).map((_, i) => {
-  const statuses: Call["status"][] = ["open", "resolved", "rejected"];
-  return {
-    id: `C-${1000 + i}`,
-    dispute_id: `DP-${1000 + i}`,
 
-    name: [
-      "Marcus Lee",
-      "Aria Chen",
-      "Sofia Ruiz",
-      "Devon Park",
-      "Priya Patel",
-      "Noah Kim",
-      "Elena Petrova",
-      "Liam Osei",
-    ][i % 8],
-    operator: [
-      "Priya Patel",
-      "Noah Kim",
-      "Elena Petrova",
-      "Liam Osei",
-      "Marcus Lee",
-      "Aria Chen",
-      "Sofia Ruiz",
-      "Devon Park",
-    ][i % 8],
-    charged: `AED ${(i % 9) + 1}`,
-    reason: [
-      "Operator didn't connect to Eritrea",
-      "Connection timeout in Somalia",
-      "No response from the operator",
-      "No response from the operator",
-      "Operator failed to connect to Nigeria",
-      "Connection issues in Ghana",
-    ][i % 6],
-    status: statuses[i % statuses.length],
-    joined: `2026-0${(i % 6) + 1}-1${i % 9}`,
-  };
-});
+const PAGE_SIZE = 20;
 
-const PAGE_SIZE = 8;
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+};
+
 const DisputesTable = () => {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
-  const [planFilter, setPlanFilter] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
 
-  // Loading is a plain true/false you control however you like —
-  // here it's simulated with a short timeout on every search/filter/page change,
-  // exactly like you would while awaiting a real API call.
-  const [loading, setLoading] = React.useState(false);
+  // Modal + form state
+  const [viewRow, setViewRow] = React.useState<Dispute | null>(null);
+  const [refundAmount, setRefundAmount] = React.useState("");
+  const [adminNote, setAdminNote] = React.useState("");
 
-  // View / delete modal state
-  const [viewRow, setViewRow] = React.useState<Call | null>(null);
-  const [deleteRow, setDeleteRow] = React.useState<Call | null>(null);
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+  } = useGetAllDisputesQuery({
+    page,
+    limit: PAGE_SIZE,
+    ...(statusFilter ? { status: statusFilter } : {}),
+  });
 
+  const [resolveDispute, { isLoading: isResolving }] =
+    useResolveDisputeMutation();
+  const [rejectDispute, { isLoading: isRejecting }] =
+    useRejectDisputeMutation();
+
+  const loading = isLoading || isFetching;
+  const disputes = response?.data?.disputes ?? [];
+  const meta = response?.data?.meta;
+
+  // Client-side search on top of the currently loaded page.
+  // Note: since /disputes doesn't document a search param, this only
+  // filters within the current page's results. If the backend adds a
+  // `search` query param, pass it into useGetAllDisputesQuery instead.
   const filtered = React.useMemo(() => {
-    return ALL_CUSTOMERS.filter((c) => {
-      const matchesSearch =
-        !search ||
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.operator.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = !statusFilter || c.status === statusFilter;
-      // const matchesPlan = !planFilter || c.plan === planFilter;
-      return matchesSearch && matchesStatus
-    });
-  }, [search, statusFilter]);
-setViewRow;
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    if (!search) return disputes;
+    const q = search.toLowerCase();
+    return disputes.filter(
+      (d) =>
+        d.customerId?.name?.toLowerCase().includes(q) ||
+        d.operatorId?.name?.toLowerCase().includes(q) ||
+        d.callId?.callRef?.toLowerCase().includes(q) ||
+        d.disputeRef?.toLowerCase().includes(q),
+    );
+  }, [disputes, search]);
 
-  // Simulate a network call whenever a query-affecting value changes.
-  React.useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, [search, statusFilter, planFilter, page]);
+  const resetForm = () => {
+    setRefundAmount("");
+    setAdminNote("");
+  };
 
-  const columns: DataTableColumn<Call>[] = [
-    { key: "dispute_id", header: "Dispute", width: "110px" },
-    { key: "id", header: "Call", width: "110px" },
-    { key: "name", header: "Customer" },
-    { key: "operator", header: "Operator" },
+  const handleCloseModal = () => {
+    setViewRow(null);
+    resetForm();
+  };
+
+  const handleResolve = async () => {
+    if (!viewRow) return;
+    try {
+      await resolveDispute({
+        id: viewRow._id,
+        data: {
+          refundAmount: Number(refundAmount) || 0,
+          adminNote,
+        },
+      }).unwrap();
+      handleCloseModal();
+    } catch (err) {
+      console.error("Failed to resolve dispute", err);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!viewRow) return;
+    try {
+      await rejectDispute({
+        id: viewRow._id,
+        data: { adminNote },
+      }).unwrap();
+      handleCloseModal();
+    } catch (err) {
+      console.error("Failed to reject dispute", err);
+    }
+  };
+
+  const columns: DataTableColumn<Dispute>[] = [
+    { key: "disputeRef", header: "Dispute", width: "110px" },
     {
-      key: "charged",
+      key: "callId",
+      header: "Call",
+      width: "110px",
+      render: (row) => <p>{row.callId?.callRef}</p>,
+    },
+    {
+      key: "customerId",
+      header: "Customer",
+      render: (row) => <p>{row.customerId?.name}</p>,
+    },
+    {
+      key: "operatorId",
+      header: "Operator",
+      render: (row) => <p>{row.operatorId?.name}</p>,
+    },
+    {
+      key: "amount",
       header: "Amount",
-      render: (row) => <p>{row.charged}</p>,
+      render: (row) => <p>AED {row.amount}</p>,
     },
     {
       key: "reason",
@@ -122,8 +162,11 @@ setViewRow;
         <StatusBadge status={row.status}>{row.status}</StatusBadge>
       ),
     },
-    { key: "joined", header: "Date" },
-
+    {
+      key: "createdAt",
+      header: "Date",
+      render: (row) => <p>{formatDate(row.createdAt)}</p>,
+    },
     {
       key: "actions",
       header: "Actions",
@@ -133,7 +176,7 @@ setViewRow;
           <Button
             variant={"outline"}
             onClick={() => setViewRow(row)}
-            className=""
+            disabled={row.status !== "open"}
             aria-label="Review"
           >
             Review
@@ -142,22 +185,20 @@ setViewRow;
       ),
     },
   ];
+
   return (
     <>
       <main className="flex-1 ">
         <DataTable
           title="All Disputes"
           columns={columns}
-          data={paged}
-          rowKey={(row) => row.id}
+          data={filtered}
+          rowKey={(row) => row._id}
           loading={loading}
           searchable
-          searchPlaceholder="Search call id, number ..."
+          searchPlaceholder="Search call id, name ..."
           searchValue={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
+          onSearchChange={setSearch}
           filters={[
             {
               key: "status",
@@ -177,43 +218,50 @@ setViewRow;
           pagination={{
             page,
             pageSize: PAGE_SIZE,
-            totalItems: filtered.length,
+            totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}
           emptyState={
-            <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
-              <SearchX className="size-8 opacity-60" />
-              <p className="text-sm">
-                No customers match your search or filters.
-              </p>
-            </div>
+            loading ? (
+              <div className="space-y-2 py-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+                <SearchX className="size-8 opacity-60" />
+                <p className="text-sm">
+                  No disputes match your search or filters.
+                </p>
+              </div>
+            )
           }
         />
       </main>
 
-      {/* View details modal */}
+      {/* View / resolve / reject modal */}
       <Modal
         open={!!viewRow}
-        onClose={() => setViewRow(null)}
-        title={`Dispute ${viewRow?.dispute_id}`}
-        description={`${viewRow?.name}. vs ${viewRow?.operator}`}
+        onClose={handleCloseModal}
+        title={`Dispute ${viewRow?.disputeRef}`}
+        description={`${viewRow?.customerId?.name} vs ${viewRow?.operatorId?.name}`}
         footer={
           <>
             <Button
               variant="outline"
               className="text-status-failed border-status-failed!"
-              onClick={() => setViewRow(null)}
+              onClick={handleReject}
+              disabled={isRejecting || isResolving}
             >
-              Reject Claim
+              {isRejecting ? "Rejecting..." : "Reject Claim"}
             </Button>
             <Button
               variant="default"
-              onClick={() => {
-                // call your delete API here
-                setViewRow(null);
-              }}
+              onClick={handleResolve}
+              disabled={isResolving || isRejecting}
             >
-              Resolve with refund
+              {isResolving ? "Resolving..." : "Resolve with refund"}
             </Button>
           </>
         }
@@ -221,21 +269,22 @@ setViewRow;
         {viewRow && (
           <Card>
             <CardHeader>
-              {/* <CardTitle className="text-2xl">0</CardTitle> */}
               <CardDescription>
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between items-center">
                     <dt className="text-muted-foreground text-sm flex gap-1 items-center">
                       Call
                     </dt>
-                    <dd className="font-medium text-white">{viewRow?.id}</dd>
+                    <dd className="font-medium text-white">
+                      {viewRow.callId?.callRef}
+                    </dd>
                   </div>
                   <div className="flex justify-between items-center">
                     <dt className="text-muted-foreground text-sm flex gap-1 items-center">
                       Amount
                     </dt>
                     <dd className="font-medium text-white">
-                      {viewRow?.charged}
+                      AED {viewRow.amount}
                     </dd>
                   </div>
                   <div className="flex justify-between items-center">
@@ -243,16 +292,14 @@ setViewRow;
                       Date
                     </dt>
                     <dd className="font-medium text-white">
-                      {viewRow?.joined}
+                      {formatDate(viewRow.createdAt)}
                     </dd>
                   </div>
                   <div className="flex justify-between items-center">
                     <dt className="text-muted-foreground text-sm flex gap-1 items-center">
                       Status
                     </dt>
-                    <dd className="font-medium text-white">
-                      {viewRow?.status}
-                    </dd>
+                    <dd className="font-medium text-white">{viewRow.status}</dd>
                   </div>
                 </dl>
               </CardDescription>
@@ -262,7 +309,6 @@ setViewRow;
 
         <Card>
           <CardHeader>
-            {/* <CardTitle className="text-2xl">0</CardTitle> */}
             <CardDescription>
               <p className="text-white font-semibold">Customer claim</p>
               <p className="text-sm">{viewRow?.reason}</p>
@@ -271,40 +317,33 @@ setViewRow;
         </Card>
 
         <div className="space-y-1.5">
-          <Label htmlFor="name" className="text-xs font-medium">
-            Email when ready
+          <Label htmlFor="refundAmount" className="text-xs font-medium">
+            Refund amount (AED)
+          </Label>
+          <Input
+            id="refundAmount"
+            type="number"
+            min={0}
+            step="0.01"
+            value={refundAmount}
+            onChange={(e) => setRefundAmount(e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="adminNote" className="text-xs font-medium">
+            Admin note
           </Label>
           <Textarea
             rows={6}
-            id="name"
+            id="adminNote"
+            value={adminNote}
+            onChange={(e) => setAdminNote(e.target.value)}
             placeholder="What you found, who you contacted ..."
           />
         </div>
       </Modal>
-
-      {/* Delete confirmation modal */}
-      <Modal
-        open={!!deleteRow}
-        onClose={() => setDeleteRow(null)}
-        title="Delete customer"
-        description={`Are you sure you want to delete ${deleteRow?.name}? This can't be undone.`}
-        footer={
-          <>
-            <Button variant="cancel" onClick={() => setDeleteRow(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                // call your delete API here
-                setDeleteRow(null);
-              }}
-            >
-              Delete
-            </Button>
-          </>
-        }
-      />
     </>
   );
 };

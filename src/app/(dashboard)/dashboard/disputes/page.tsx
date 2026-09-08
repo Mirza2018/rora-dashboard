@@ -1,49 +1,25 @@
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+"use client";
 
-import CallsTable from "@/components/calls_page/calls_table";
+import DisputesTable from "@/components/disputes_page/disputes_table";
 import {
   Card,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
-import DisputesTable from "@/components/disputes_page/disputes_table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGetDisputesStarQuery } from "@/redux/api/adminApi"; // adjust to your actual path
 
-const ROWS = [
-  {
-    id: "TXN-0231",
-    customer: "Marcus Lee",
-    amount: "$482.00",
-    status: "complete" as const,
-  },
-  {
-    id: "TXN-0230",
-    customer: "Aria Chen",
-    amount: "$129.50",
-    status: "pending" as const,
-  },
-  {
-    id: "TXN-0229",
-    customer: "Sofia Ruiz",
-    amount: "$88.20",
-    status: "failed" as const,
-  },
-  {
-    id: "TXN-0228",
-    customer: "Devon Park",
-    amount: "$964.00",
-    status: "suspend" as const,
-  },
-];
+const DisputesPage = () => {
+  const {
+    data: statsResponse,
+    isLoading,
+    isFetching,
+  } = useGetDisputesStarQuery({});
 
-const STATUS_ICON = {
-  complete: CheckCircle2,
-  pending: Clock,
-  failed: XCircle,
-  suspend: XCircle,
-};
+  const loading = isLoading || isFetching;
+  const stats = statsResponse?.data;
 
-const CallPage = () => {
   return (
     <main className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -60,25 +36,44 @@ const CallPage = () => {
         <Card>
           <CardHeader>
             <CardDescription>Total Disputes</CardDescription>
-            <CardTitle className="text-2xl">6</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-16 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                {stats?.totalDisputes ?? 0}
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Resolved MTD</CardDescription>
-            <CardTitle className="text-2xl">36</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-16 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                {stats?.resolvedMtd ?? 0}
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Refund total</CardDescription>
-            <CardTitle className="text-2xl">AED 1,240</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-28 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                AED {(stats?.refundTotal ?? 0).toLocaleString()}
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
       </div>
+
       <DisputesTable />
     </main>
   );
 };
 
-export default CallPage;
+export default DisputesPage;

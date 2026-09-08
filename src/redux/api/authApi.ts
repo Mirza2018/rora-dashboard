@@ -22,6 +22,30 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: [tagTypes.user],
     }),
 
+    userGetProfile: build.query<Response, any>({
+      query: () => ({
+        url: `/admin/profile`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.user],
+    }),
+    userUpdateProfile: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/admin/profile/update`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: [tagTypes.user],
+    }),
+    userPasswordChange: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/auth/change-password`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: [tagTypes.user],
+    }),
+
     userForgotPassword: build.mutation<Response, any>({
       query: (body) => ({
         url: `/auth/forgot-password-otpByEmail`,
@@ -48,31 +72,6 @@ export const authApi = baseApi.injectEndpoints({
     userResetPassword: build.mutation<Response, any>({
       query: (body) => ({
         url: `/auth/forgot-password-reset`,
-        method: "PATCH",
-        body,
-      }),
-      invalidatesTags: [tagTypes.user],
-    }),
-
-    userGetProfile: build.query<Response, any>({
-      query: (params) => ({
-        url: `/users/get-user-profile`,
-        method: "GET",
-        params,
-      }),
-      providesTags: [tagTypes.user],
-    }),
-    userUpdateProfile: build.mutation<Response, any>({
-      query: (body) => ({
-        url: `/users/update-my-profile`,
-        method: "PATCH",
-        body,
-      }),
-      invalidatesTags: [tagTypes.user],
-    }),
-    userPasswordChange: build.mutation<Response, any>({
-      query: (body) => ({
-        url: `/auth/change-password`,
         method: "PATCH",
         body,
       }),
