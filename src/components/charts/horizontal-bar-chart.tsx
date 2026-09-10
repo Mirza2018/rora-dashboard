@@ -10,48 +10,42 @@ import {
   YAxis,
 } from "recharts";
 
-const data = [
-  { day: "Mon", issued: 24, customers: 4 },
-  { day: "Tue", issued: 32, customers: 6 },
-  { day: "Wed", issued: 18, customers: 3 },
-  { day: "Thu", issued: 41, customers: 8 },
-  { day: "Fri", issued: 36, customers: 5 },
-  { day: "Sat", issued: 22, customers: 2 },
-  { day: "Sun", issued: 15, customers: 1 },
-];
+export type WeeklyTrendPoint = {
+  week: string;
+  issued: number;
+  transferred: number;
+};
 
-export function HorizontalBarChart() {
+type HorizontalBarChartProps = {
+  data: WeeklyTrendPoint[];
+};
+
+export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart
-        barSize={30}
         data={data}
-        margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+        barGap={4}
+        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
       >
+        <CartesianGrid stroke="#414144" strokeDasharray="4" vertical={false} />
         <XAxis
-          dataKey="day"
+          dataKey="week"
           stroke="var(--muted-foreground)"
           fontSize={12}
+          tick={{ fill: "#BFBFBF", fontSize: 12 }}
           tickLine={false}
           axisLine={false}
         />
         <YAxis
+          type="number"
+          stroke="white"
+          fontSize={10}
+          tick={{ fill: "#BFBFBF", fontSize: 12 }}
           tickLine={false}
           axisLine={false}
-          tick={{
-            fill: "#999999",
-            fontSize: 11,
-            fontWeight: 400,
-          }}
         />
         <Tooltip
-          formatter={(value, name) => [
-            `${Number(value)}`,
-            name === "issued" ? "Issued" : "Transferred to customers",
-          ]}
-          cursor={{
-            fill: "rgba(0, 0, 0, 0)",
-          }}
           contentStyle={{
             background: "var(--card)",
             border: "1px solid var(--card-border)",
@@ -62,15 +56,15 @@ export function HorizontalBarChart() {
         <Bar
           dataKey="issued"
           fill="var(--chart-bar-1)"
-          radius={[12, 12, 0, 0]}
+          radius={[4, 4, 0, 0]}
+          barSize={16}
         />
         <Bar
-          dataKey="customers"
-          fill="var(--chart-bar-2)"
-          radius={[12, 12, 0, 0]}
+          dataKey="transferred"
+          fill="var(--status-complete, #27C281)"
+          radius={[4, 4, 0, 0]}
+          barSize={16}
         />
-
-        <CartesianGrid stroke="#414144" horizontal={true} vertical={false} />
       </BarChart>
     </ResponsiveContainer>
   );

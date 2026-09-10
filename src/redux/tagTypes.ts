@@ -8,6 +8,7 @@ export const tagTypes = {
   calls: "Calls",
   operators: "Operators",
   customers: "Customers",
+  destinations: "Destinations",
 };
 
 export const tagTypesList = [
@@ -19,4 +20,5 @@ export const tagTypesList = [
   tagTypes.calls,
   tagTypes.operators,
   tagTypes.customers,
+  tagTypes.destinations,
 ];

@@ -1,5 +1,8 @@
 "use client";
-import { CheckCircle2, Clock, Plus, XCircle } from "lucide-react";
+
+import { CheckCircle2, Plus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import PricingTable from "@/components/pricing_page/pricing_table";
 import { Button } from "@/components/ui/button";
@@ -9,46 +12,97 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Modal } from "@/components/ui/modal";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-const ROWS = [
-  {
-    id: "TXN-0231",
-    customer: "Marcus Lee",
-    amount: "$482.00",
-    status: "complete" as const,
-  },
-  {
-    id: "TXN-0230",
-    customer: "Aria Chen",
-    amount: "$129.50",
-    status: "pending" as const,
-  },
-  {
-    id: "TXN-0229",
-    customer: "Sofia Ruiz",
-    amount: "$88.20",
-    status: "failed" as const,
-  },
-  {
-    id: "TXN-0228",
-    customer: "Devon Park",
-    amount: "$964.00",
-    status: "suspend" as const,
-  },
-];
+import {
+  useGetDestinationsQuery,
+  useCreateDestinationMutation,
+} from "@/redux/api/adminApi"; // adjust to your actual path
 
-const STATUS_ICON = {
-  complete: CheckCircle2,
-  pending: Clock,
-  failed: XCircle,
-  suspend: XCircle,
-};
-
-const CallPage = () => {
+const PricingPage = () => {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [prefix, setPrefix] = useState("");
+  const [customerRate, setCustomerRate] = useState("");
+  const [operatorPayout, setOperatorPayout] = useState("");
+
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+  } = useGetDestinationsQuery(undefined);
+  const [createDestination, { isLoading: isCreating }] =
+    useCreateDestinationMutation();
+
+  const loading = isLoading || isFetching;
+  const destinations = response?.data ?? [];
+
+  const activeCount = destinations.filter(
+    (d: any) => d.status === "active",
+  ).length;
+  const avgMargin =
+    destinations.length > 0
+      ? destinations.reduce(
+          (sum: number, d: any) => sum + (d.marginPerMin ?? 0),
+          0,
+        ) / destinations.length
+      : 0;
+  const lastUpdated = destinations.reduce(
+    (latest: string | null, d: any) => {
+      if (!latest) return d.updatedAt;
+      return new Date(d.updatedAt) > new Date(latest) ? d.updatedAt : latest;
+    },
+    null as string | null,
+  );
+
+  const lastUpdatedLabel = (() => {
+    if (!lastUpdated) return "—";
+    const d = new Date(lastUpdated);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    return isToday
+      ? "Today"
+      : d.toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+        });
+  })();
+
+  const resetForm = () => {
+    setName("");
+    setPrefix("");
+    setCustomerRate("");
+    setOperatorPayout("");
+  };
+
+  const handleCreate = async () => {
+    if (!name.trim() || !prefix.trim() || !customerRate || !operatorPayout) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
+    const toastId = toast.loading("Creating rate...");
+    try {
+      await createDestination({
+        name: name.trim(),
+        prefix: prefix.trim(),
+        customerRatePerMin: Number(customerRate),
+        operatorPayoutPerMin: Number(operatorPayout),
+      }).unwrap();
+
+      toast.success("Rate created successfully.", { id: toastId });
+      setIsInviteOpen(false);
+      resetForm();
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to create rate.", {
+        id: toastId,
+      });
+    }
+  };
+
   return (
     <main className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -60,10 +114,8 @@ const CallPage = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          {/* <Button variant="cancel">Cancel</Button> */}
           <Button onClick={() => setIsInviteOpen(true)}>
             <Plus className="size-4" />
-            {/* <Download className="size-4" /> */}
             New Rate
           </Button>
         </div>
@@ -74,75 +126,124 @@ const CallPage = () => {
         <Card>
           <CardHeader>
             <CardDescription>Active destinations</CardDescription>
-            <CardTitle className="text-2xl">3</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-12 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">{activeCount}</CardTitle>
+            )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Avg margin/min</CardDescription>
-            <CardTitle className="text-2xl">AED 0.50</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-24 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">
+                AED {avgMargin.toFixed(2)}
+              </CardTitle>
+            )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Last updated</CardDescription>
-            <CardTitle className="text-2xl">Today</CardTitle>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <CardTitle className="text-2xl">{lastUpdatedLabel}</CardTitle>
+            )}
           </CardHeader>
         </Card>
       </div>
 
       <Modal
-        open={!!isInviteOpen}
-        onClose={() => setIsInviteOpen(false)}
-        title={`New rate`}
-        description={`Customer rate and operator payout drive the platform margin per minute.`}
+        open={isInviteOpen}
+        onClose={() => {
+          setIsInviteOpen(false);
+          resetForm();
+        }}
+        title="New rate"
+        description="Customer rate and operator payout drive the platform margin per minute."
         footer={
           <>
-            <Button variant="cancel" onClick={() => setIsInviteOpen(false)}>
+            <Button
+              variant="cancel"
+              onClick={() => {
+                setIsInviteOpen(false);
+                resetForm();
+              }}
+              disabled={isCreating}
+            >
               Cancel
             </Button>
             <Button
               variant="default"
-              onClick={() => {
-                // call your delete API here
-                setIsInviteOpen(false);
-              }}
+              onClick={handleCreate}
+              disabled={isCreating}
             >
-              Create Rate
+              {isCreating ? "Creating..." : "Create Rate"}
             </Button>
           </>
         }
       >
         <div className="space-y-1.5">
-          <Label htmlFor="name" className="text-white">
+          <Label htmlFor="destName" className="text-white">
             Destination name
           </Label>
-          <Input id="name" placeholder="Ahmed Saleh" />
+          <Input
+            id="destName"
+            placeholder="Egypt - Eritrea"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="phone" className="text-white">
+          <Label htmlFor="destPrefix" className="text-white">
             Prefix
           </Label>
-          <Input id="phone" placeholder="+971/7" />
+          <Input
+            id="destPrefix"
+            placeholder="+971/7"
+            value={prefix}
+            onChange={(e) => setPrefix(e.target.value)}
+          />
         </div>
-        <div className="flex gap-5 ">
+        <div className="flex gap-5">
           <div className="space-y-1.5 flex-1">
-            <Label htmlFor="min" className="text-white">
+            <Label htmlFor="custRate" className="text-white">
               Customer rate (AED/min)
             </Label>
-            <Input id="min" placeholder="1.50" />
+            <Input
+              id="custRate"
+              type="number"
+              step="0.01"
+              min={0}
+              placeholder="1.50"
+              value={customerRate}
+              onChange={(e) => setCustomerRate(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5 flex-1">
-            <Label htmlFor="payout" className="text-white">
+            <Label htmlFor="opPayout" className="text-white">
               Operator payout (AED/min)
             </Label>
-            <Input id="payout" placeholder="1.00" />
+            <Input
+              id="opPayout"
+              type="number"
+              step="0.01"
+              min={0}
+              placeholder="1.00"
+              value={operatorPayout}
+              onChange={(e) => setOperatorPayout(e.target.value)}
+            />
           </div>
         </div>
       </Modal>
-      <PricingTable />
+
+      <PricingTable destinations={destinations} loading={loading} />
     </main>
   );
 };
 
-export default CallPage;
+export default PricingPage;

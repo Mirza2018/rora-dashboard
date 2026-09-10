@@ -1,131 +1,224 @@
 "use client";
 
-import { Eye, Pencil, SearchX, Trash2 } from "lucide-react";
+import { SearchX } from "lucide-react";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useGetCallsQuery } from "@/redux/api/adminApi"; // adjust to your actual path
 
-// ── Your data type ───────────────────────────────────────────
+// ── API-shaped call type ─────────────────────────────────────
+type CallStatus =
+  | "requested"
+  | "assigned"
+  | "dialing_customer"
+  | "customer_connected"
+  | "dialing_destination"
+  | "destination_connected"
+  | "conferencing"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
 type Call = {
-  id: string;
-  name: string;
-  email: string;
-  operator: string;
-  destination: string;
-  duration: string;
-  charged: string;
-  min: string;
-  plan: string;
-  status: "complete" | "failed" | "pending";
-  joined: string;
+  _id: string;
+  callRef: string;
+  customerId: { _id: string; name: string; phone: string };
+  destinationId: { _id: string; name: string; prefix: string };
+  operatorId?: { _id: string; name: string; phone: string };
+  numberDialed: string;
+  status: CallStatus;
+  requestedAt: string;
+  createdAt: string;
+  endedAt?: string;
+  customerConnectedAt?: string;
+  costMoney?: number;
+  minutesUsed?: number;
+  failureReason?: string;
 };
 
-const ALL_CUSTOMERS: Call[] = Array.from({ length: 47 }).map((_, i) => {
-  const statuses: Call["status"][] = ["complete", "failed", "pending"];
-  const plans = ["Starter", "Pro", "Enterprise"];
-  return {
-    id: `C-${1000 + i}`,
-    joined: `2026-0${(i % 6) + 1}-1${i % 9}`,
-    email: `user${i}@company.com`,
-    name: [
-      "Marcus Lee",
-      "Aria Chen",
-      "Sofia Ruiz",
-      "Devon Park",
-      "Priya Patel",
-      "Noah Kim",
-      "Elena Petrova",
-      "Liam Osei",
-    ][i % 8],
-    operator: [
-      "Priya Patel",
-      "Noah Kim",
-      "Elena Petrova",
-      "Liam Osei",
-      "Marcus Lee",
-      "Aria Chen",
-      "Sofia Ruiz",
-      "Devon Park",
-    ][i % 8],
-    destination: `+1 234 567 890${i % 9}`,
-    duration: `${i % 6} min ${i % 9} sec`,
-    charged: `AED ${(i % 9) + 1}`,
-    min: `${(i % 9) + 1}`,
-    // email: `user${i}@company.com`,
-    plan: plans[i % plans.length],
-    status: statuses[i % statuses.length],
-  };
-});
 
-const PAGE_SIZE = 8;
+const SEARCH_DEBOUNCE_MS = 400;
+
+const STATUS_OPTIONS: { label: string; value: CallStatus }[] = [
+  { label: "Requested", value: "requested" },
+  { label: "Assigned", value: "assigned" },
+  { label: "Dialing customer", value: "dialing_customer" },
+  { label: "Customer connected", value: "customer_connected" },
+  { label: "Dialing destination", value: "dialing_destination" },
+  { label: "Destination connected", value: "destination_connected" },
+  { label: "Conferencing", value: "conferencing" },
+  { label: "Completed", value: "completed" },
+  { label: "Failed", value: "failed" },
+  { label: "Cancelled", value: "cancelled" },
+];
+
+const DAYS_OPTIONS = [
+  { label: "Last 7 days", value: "7" },
+  { label: "Last 15 days", value: "15" },
+  { label: "Last 30 days", value: "30" },
+];
+
+// In-flight/live statuses map to a "pending"-style badge; completed/failed/
+// cancelled map to their matching badge tokens. Adjust to match whatever
+// variants StatusBadge actually supports.
+const statusBadgeMap: Record<CallStatus, string> = {
+  requested: "pending",
+  assigned: "pending",
+  dialing_customer: "pending",
+  customer_connected: "pending",
+  dialing_destination: "pending",
+  destination_connected: "pending",
+  conferencing: "pending",
+  completed: "complete",
+  failed: "failed",
+  cancelled: "pending",
+};
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+};
+
+const formatDateTime = (iso?: string) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatDuration = (call: Call) => {
+  if (call.minutesUsed != null) return `${call.minutesUsed} min`;
+  if (call.customerConnectedAt && call.endedAt) {
+    const ms =
+      new Date(call.endedAt).getTime() -
+      new Date(call.customerConnectedAt).getTime();
+    if (ms > 0) {
+      const totalSec = Math.round(ms / 1000);
+      return `${Math.floor(totalSec / 60)} min ${totalSec % 60} sec`;
+    }
+  }
+  return "—";
+};
+
+// Debounce a fast-changing value.
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = React.useState(value);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
+
 const CallsTable = () => {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
-  const [planFilter, setPlanFilter] = React.useState<string | null>(null);
+  const [daysFilter, setDaysFilter] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
 
-  // Loading is a plain true/false you control however you like —
-  // here it's simulated with a short timeout on every search/filter/page change,
-  // exactly like you would while awaiting a real API call.
-  const [loading, setLoading] = React.useState(false);
-
-  // View / delete modal state
   const [viewRow, setViewRow] = React.useState<Call | null>(null);
-  const [deleteRow, setDeleteRow] = React.useState<Call | null>(null);
 
-  const filtered = React.useMemo(() => {
-    return ALL_CUSTOMERS.filter((c) => {
-      const matchesSearch =
-        !search ||
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.operator.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = !statusFilter || c.status === statusFilter;
-      const matchesPlan = !planFilter || c.plan === planFilter;
-      return matchesSearch && matchesStatus && matchesPlan;
-    });
-  }, [search, statusFilter, planFilter]);
+  const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
 
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+  } = useGetCallsQuery({
+    page,
+    limit: 8,
+    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(daysFilter ? { days: daysFilter } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+  });
 
-  // Simulate a network call whenever a query-affecting value changes.
-  React.useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, [search, statusFilter, planFilter, page]);
+  const loading = isLoading || isFetching;
+  const calls = response?.data?.calls ?? [];
+  const meta = response?.data?.meta;
 
   const columns: DataTableColumn<Call>[] = [
-    { key: "id", header: "Call", width: "110px" },
-    { key: "joined", header: "Date" },
-    { key: "name", header: "Customer" },
-    { key: "operator", header: "Operator" },
-    { key: "destination", header: "Destination" },
-    { key: "duration", header: "Duration" },
+    { key: "callRef", header: "Call", width: "130px" },
     {
-      key: "charged",
-      header: "Charged",
-      render: (row) => <p>{row.charged}</p>,
+      key: "createdAt",
+      header: "Date",
+      render: (row) => <p>{formatDate(row.createdAt)}</p>,
     },
-    { key: "min", header: "Min" },
+    {
+      key: "customerId",
+      header: "Customer",
+      render: (row) => <p>{row.customerId?.name}</p>,
+    },
+    {
+      key: "operatorId",
+      header: "Operator",
+      render: (row) => <p>{row.operatorId?.name ?? "—"}</p>,
+    },
+    {
+      key: "destinationId",
+      header: "Destination",
+      render: (row) => <p>{row.destinationId?.name}</p>,
+    },
+    {
+      key: "duration",
+      header: "Duration",
+      render: (row) => <p>{formatDuration(row)}</p>,
+    },
+    {
+      key: "costMoney",
+      header: "Charged",
+      render: (row) => <p>AED {row.costMoney ?? 0}</p>,
+    },
+    {
+      key: "minutesUsed",
+      header: "Min",
+      render: (row) => <p>{row.minutesUsed ?? 0}</p>,
+    },
     {
       key: "status",
       header: "Status",
       render: (row) => (
-        <StatusBadge status={row.status}>{row.status}</StatusBadge>
+        <StatusBadge status={statusBadgeMap[row.status] as any}>
+          {row.status.replace(/_/g, " ")}
+        </StatusBadge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      render: (row) => (
+        <button
+          onClick={() => setViewRow(row)}
+          className="text-xs font-medium text-primary hover:underline"
+        >
+          View
+        </button>
       ),
     },
   ];
+
   return (
     <>
       <main className="flex-1 ">
         <DataTable
           title="Calls"
           columns={columns}
-          data={paged}
-          rowKey={(row) => row.id}
+          data={calls}
+          rowKey={(row) => row._id}
           loading={loading}
           searchable
           searchPlaceholder="Search call id, number ..."
@@ -139,31 +232,41 @@ const CallsTable = () => {
               key: "status",
               placeholder: "Status",
               value: statusFilter,
-              options: [
-                { label: "Complete", value: "complete" },
-                { label: "Failed", value: "failed" },
-                { label: "Pending", value: "pending" },
-              ],
+              options: STATUS_OPTIONS,
+            },
+            {
+              key: "days",
+              placeholder: "Date range",
+              value: daysFilter,
+              options: DAYS_OPTIONS,
             },
           ]}
           onFilterChange={(key, value) => {
             if (key === "status") setStatusFilter(value);
-            if (key === "plan") setPlanFilter(value);
+            if (key === "days") setDaysFilter(value);
             setPage(1);
           }}
           pagination={{
             page,
-            pageSize: PAGE_SIZE,
-            totalItems: filtered.length,
+            pageSize: 8,
+            totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}
           emptyState={
-            <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
-              <SearchX className="size-8 opacity-60" />
-              <p className="text-sm">
-                No customers match your search or filters.
-              </p>
-            </div>
+            loading ? (
+              <div className="space-y-2 py-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+                <SearchX className="size-8 opacity-60" />
+                <p className="text-sm">
+                  No calls match your search or filters.
+                </p>
+              </div>
+            )
           }
         />
       </main>
@@ -172,62 +275,72 @@ const CallsTable = () => {
       <Modal
         open={!!viewRow}
         onClose={() => setViewRow(null)}
-        title="Customer details"
-        description={viewRow?.id}
+        title={`Call ${viewRow?.callRef}`}
+        description={viewRow?.numberDialed}
       >
         {viewRow && (
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Name</dt>
-              <dd className="text-foreground font-medium">{viewRow.name}</dd>
+              <dt className="text-muted-foreground">Customer</dt>
+              <dd className="text-foreground font-medium">
+                {viewRow.customerId?.name}
+              </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Email</dt>
-              <dd className="text-foreground">{viewRow?.email}</dd>
+              <dt className="text-muted-foreground">Customer phone</dt>
+              <dd className="text-foreground">{viewRow.customerId?.phone}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Plan</dt>
-              <dd className="text-foreground">{viewRow.plan}</dd>
+              <dt className="text-muted-foreground">Operator</dt>
+              <dd className="text-foreground">
+                {viewRow.operatorId?.name ?? "—"}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Destination</dt>
+              <dd className="text-foreground">
+                {viewRow.destinationId?.name} ({viewRow.destinationId?.prefix})
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Requested</dt>
+              <dd className="text-foreground">
+                {formatDateTime(viewRow.requestedAt)}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Ended</dt>
+              <dd className="text-foreground">
+                {formatDateTime(viewRow.endedAt)}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Duration</dt>
+              <dd className="text-foreground">{formatDuration(viewRow)}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Charged</dt>
+              <dd className="text-foreground">AED {viewRow.costMoney ?? 0}</dd>
             </div>
             <div className="flex justify-between items-center">
               <dt className="text-muted-foreground">Status</dt>
               <dd>
-                <StatusBadge status={viewRow.status} className="hidden">
-                  {viewRow.status}
+                <StatusBadge status={statusBadgeMap[viewRow.status] as any}>
+                  {viewRow.status.replace(/_/g, " ")}
                 </StatusBadge>
               </dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Joined</dt>
-              <dd className="text-foreground">{viewRow.joined}</dd>
-            </div>
+            {viewRow.failureReason && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Failure reason</dt>
+                <dd className="text-foreground capitalize">
+                  {viewRow.failureReason.replace(/_/g, " ")}
+                </dd>
+              </div>
+            )}
           </dl>
         )}
       </Modal>
-
-      {/* Delete confirmation modal */}
-      <Modal
-        open={!!deleteRow}
-        onClose={() => setDeleteRow(null)}
-        title="Delete customer"
-        description={`Are you sure you want to delete ${deleteRow?.name}? This can't be undone.`}
-        footer={
-          <>
-            <Button variant="cancel" onClick={() => setDeleteRow(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                // call your delete API here
-                setDeleteRow(null);
-              }}
-            >
-              Delete
-            </Button>
-          </>
-        }
-      />
     </>
   );
 };

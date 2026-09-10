@@ -5,131 +5,174 @@ import {
   Building,
   DollarSign,
   Eye,
-  Mail,
-  Pencil,
   Phone,
   PhoneCall,
   SearchX,
-  Trash2,
   TriangleAlert,
+  RotateCcw,
+  BadgeCheck,
 } from "lucide-react";
 import * as React from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Separator } from "@base-ui/react";
-import Image from "next/image";
+import { Card, CardDescription, CardHeader } from "../ui/card";
 import { Label } from "../ui/label";
-import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { DropdownMenu } from "../ui/dropdown-menu";
+import {
+  useGetOperatorsQuery,
+  useVerifyOperatorMutation,
+  useSuspendOperatorMutation,
+  useActiveOperatorMutation,
+} from "@/redux/api/adminApi"; // adjust to your actual path
 
-// ── Your data type ───────────────────────────────────────────
-type Call = {
-  id: string;
+// ── API-shaped operator type ───────────────────────────────────
+type OperatorStatus = "active" | "suspended" | "pending_verification";
+
+type Operator = {
+  _id: string;
   name: string;
   phone: string;
+  image?: string;
+  status: OperatorStatus;
+  createdAt: string;
   city: string;
-  status: "active" | "suspended" | "pending";
-  kyc: "verified" | "pending";
-  calls: string;
-  earning: string;
-  joined: string;
+  isVerified: boolean;
+  totalCalls: number;
+  totalEarnings: number;
+  availabilityStatus: "online" | "offline" | "busy";
 };
 
-const ALL_CUSTOMERS: Call[] = Array.from({ length: 47 }).map((_, i) => {
-  const statuses: Call["status"][] = ["active", "suspended", "pending"];
-  const kyces: Call["kyc"][] = ["verified", "pending"];
-  return {
-    id: `OP-${1000 + i}`,
-    name: [
-      "Marcus Lee",
-      "Aria Chen",
-      "Sofia Ruiz",
-      "Devon Park",
-      "Priya Patel",
-      "Noah Kim",
-      "Elena Petrova",
-      "Liam Osei",
-    ][i % 8],
-    phone: `+1 234 567 890${i % 9}`,
+const PAGE_SIZE = 20;
 
-    city: [
-      "Dubai",
-      "Sharjah",
-      "Abu Dhabi",
-      "Ajman",
-      "Fujairah",
-      "Ras Al Khaimah",
-    ][i % 6],
-    status: statuses[i % statuses.length],
-    kyc: kyces[i % kyces.length],
-    calls: `${i % 5}${i % 4}${(i % 9) + 1}`,
-    earning: `AED ${((i % 9) + 1) * 2}`,
-    joined: `2026-0${(i % 6) + 1}-1${i % 9}`,
-  };
-});
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+};
 
-const PAGE_SIZE = 8;
+// Map API status -> badge tokens your StatusBadge already understands.
+const statusBadgeMap: Record<OperatorStatus, string> = {
+  active: "active",
+  suspended: "suspended",
+  pending_verification: "pending",
+};
+
 const OperatorsTable = () => {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
-  const [planFilter, setPlanFilter] = React.useState<string | null>(null);
+  const [cityFilter, setCityFilter] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
 
-  // Loading is a plain true/false you control however you like —
-  // here it's simulated with a short timeout on every search/filter/page change,
-  // exactly like you would while awaiting a real API call.
-  const [loading, setLoading] = React.useState(false);
+  const [viewRow, setViewRow] = React.useState<Operator | null>(null);
+  const [suspendRow, setSuspendRow] = React.useState<Operator | null>(null);
+  const [suspendReason, setSuspendReason] = React.useState("");
 
-  // View / delete modal state
-  const [viewRow, setViewRow] = React.useState<Call | null>(null);
-  const [deleteRow, setDeleteRow] = React.useState<Call | null>(null);
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+  } = useGetOperatorsQuery({
+    page,
+    limit: PAGE_SIZE,
+    ...(statusFilter ? { status: statusFilter } : {}),
+  });
 
+  const loading = isLoading || isFetching;
+  const operators = response?.data?.operators ?? [];
+  const meta = response?.data?.meta;
+
+  const [verifyOperator, { isLoading: isVerifying }] =
+    useVerifyOperatorMutation();
+  const [suspendOperator, { isLoading: isSuspending }] =
+    useSuspendOperatorMutation();
+  const [activeOperator, { isLoading: isActivating }] =
+    useActiveOperatorMutation();
+
+  // Client-side search + city filter on the currently loaded page.
   const filtered = React.useMemo(() => {
-    return ALL_CUSTOMERS.filter((c) => {
+    return operators.filter((o) => {
       const matchesSearch =
         !search ||
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.phone.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = !statusFilter || c.status === statusFilter;
-      const matchesPlan = !planFilter || c.city === planFilter;
-      return matchesSearch && matchesStatus && matchesPlan;
+        o.name.toLowerCase().includes(search.toLowerCase()) ||
+        o.phone.toLowerCase().includes(search.toLowerCase());
+      const matchesCity = !cityFilter || o.city === cityFilter;
+      return matchesSearch && matchesCity;
     });
-  }, [search, statusFilter, planFilter]);
+  }, [operators, search, cityFilter]);
 
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const handleVerify = async (row: Operator) => {
+    const toastId = toast.loading("Verifying operator...");
+    try {
+      await verifyOperator(row._id).unwrap();
+      toast.success(`${row.name} has been verified and activated.`, {
+        id: toastId,
+      });
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to verify operator.", {
+        id: toastId,
+      });
+    }
+  };
 
-  // Simulate a network call whenever a query-affecting value changes.
-  React.useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, [search, statusFilter, planFilter, page]);
+  const handleActivate = async (row: Operator) => {
+    const toastId = toast.loading("Reactivating operator...");
+    try {
+      await activeOperator(row._id).unwrap();
+      toast.success(`${row.name} has been reactivated.`, { id: toastId });
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to activate operator.", {
+        id: toastId,
+      });
+    }
+  };
 
-  const columns: DataTableColumn<Call>[] = [
+  const handleSuspendConfirm = async () => {
+    if (!suspendRow) return;
+    const toastId = toast.loading("Suspending operator...");
+    try {
+      await suspendOperator({
+        id: suspendRow._id,
+        data: { reason: suspendReason },
+      }).unwrap();
+      toast.success(`${suspendRow.name} has been suspended.`, {
+        id: toastId,
+      });
+      setSuspendRow(null);
+      setSuspendReason("");
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to suspend operator.", {
+        id: toastId,
+      });
+    }
+  };
+
+  const columns: DataTableColumn<Operator>[] = [
     {
-      key: "id",
+      key: "_id",
       header: "Operator",
-      width: "110px",
+      width: "180px",
       render: (row) => (
         <div className="flex items-center gap-2">
-          <div>
-            <Avatar>
-              <AvatarImage
-                src="https://i.pravatar.cc/64"
-                alt="Profile picture"
-              />
-              <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
-          </div>
+          <Avatar>
+            <AvatarImage src={row.image} alt={row.name} />
+            <AvatarFallback>
+              {row.name?.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div>
             <p className="text-sm font-bold">{row.name}</p>
-            <p className="text-xs">{row.id}</p>
+            <p className="text-xs">{row._id.slice(-6)}</p>
           </div>
         </div>
       ),
@@ -140,120 +183,142 @@ const OperatorsTable = () => {
       key: "status",
       header: "Status",
       render: (row) => (
-        <StatusBadge status={row.status}>{row.status}</StatusBadge>
+        <StatusBadge status={statusBadgeMap[row.status] as any}>
+          {row.status.replace(/_/g, " ")}
+        </StatusBadge>
       ),
     },
     {
-      key: "kyc",
+      key: "isVerified",
       header: "KYC",
-      render: (row) => <StatusBadge status={row.kyc}>{row.kyc}</StatusBadge>,
-    },
-    { key: "calls", header: "Calls" },
-    {
-      key: "earning",
-      header: "Earning",
-      render: (row) => <p>{row.earning}</p>,
-    },
-    {
-      key: "joined",
-      header: "Joined",
-      render: (row) => <p>{row.joined}</p>,
-    },
-
-    {
-      key: "name",
-      header: "Customer",
       render: (row) => (
-        <div>
-          <p className="font-medium text-table-foreground">{row.name}</p>
-        </div>
+        <StatusBadge status={row.isVerified ? "verified" : "pending"}>
+          {row.isVerified ? "verified" : "pending"}
+        </StatusBadge>
       ),
     },
-
+    { key: "totalCalls", header: "Calls" },
+    {
+      key: "totalEarnings",
+      header: "Earning",
+      render: (row) => <p>AED {row.totalEarnings}</p>,
+    },
+    {
+      key: "createdAt",
+      header: "Joined",
+      render: (row) => <p>{formatDate(row.createdAt)}</p>,
+    },
     {
       key: "actions",
       header: "Actions",
       align: "right",
-      render: (row) => (
-        <div className="flex justify-end gap-1">
-          <DropdownMenu
-            items={[
-              {
-                label: "View details",
-                icon: Eye,
-                onClick: () => setViewRow(row),
-              },
-              {
-                label: "Suspend Operator",
-                icon: TriangleAlert,
-                variant: "destructive",
-                onClick: () => setDeleteRow(row),
-              },
-            ]}
-          />
-        </div>
-      ),
+      render: (row) => {
+        const items = [
+          {
+            label: "View details",
+            icon: Eye,
+            onClick: () => setViewRow(row),
+          },
+        ];
+
+        if (!row.isVerified || row.status === "pending_verification") {
+          items.push({
+            label: "Verify & Activate",
+            icon: BadgeCheck,
+            onClick: () => handleVerify(row),
+          });
+        }
+
+        if (row.status === "active") {
+          items.push({
+            label: "Suspend Operator",
+            icon: TriangleAlert,
+            variant: "destructive",
+            onClick: () => setSuspendRow(row),
+          } as any);
+        } else if (row.status === "suspended") {
+          items.push({
+            label: "Reactivate Operator",
+            icon: RotateCcw,
+            onClick: () => handleActivate(row),
+          });
+        }
+
+        return (
+          <div className="flex justify-end gap-1">
+            <DropdownMenu items={items as any} />
+          </div>
+        );
+      },
     },
   ];
+
   return (
     <>
       <main className="flex-1 ">
         <DataTable
-          title="Calls"
+          title="Operators"
           columns={columns}
-          data={paged}
-          rowKey={(row) => row.id}
+          data={filtered}
+          rowKey={(row) => row._id}
           loading={loading}
           searchable
           searchPlaceholder="Search by name, phone, or ID..."
           searchValue={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
+          onSearchChange={setSearch}
           filters={[
             {
               key: "status",
               placeholder: "Status",
               value: statusFilter,
               options: [
-                { label: "Complete", value: "complete" },
+                { label: "Active", value: "active" },
                 { label: "Suspended", value: "suspended" },
                 { label: "Pending", value: "pending" },
               ],
             },
-            {
-              key: "citys",
-              placeholder: "City",
-              value: planFilter,
-              options: [
-                { label: "Dubai", value: "dubai" },
-                { label: "Sharjah", value: "Sharjah" },
-                { label: "Abu Dhabi", value: "Abu Dhabi" },
-                { label: "Ajman", value: "Ajman" },
-                { label: "Fujairah", value: "Fujairah" },
-                { label: "Ras Al Khaimah", value: "Ras Al Khaimah" },
-              ],
-            },
+            // {
+            //   key: "city",
+            //   placeholder: "City",
+            //   value: cityFilter,
+            //   options: [
+            //     { label: "Dubai", value: "Dubai" },
+            //     { label: "Sharjah", value: "Sharjah" },
+            //     { label: "Abu Dhabi", value: "Abu Dhabi" },
+            //     { label: "Ajman", value: "Ajman" },
+            //     { label: "Fujairah", value: "Fujairah" },
+            //     { label: "Ras Al Khaimah", value: "Ras Al Khaimah" },
+            //   ],
+            // },
           ]}
           onFilterChange={(key, value) => {
-            if (key === "status") setStatusFilter(value);
-            if (key === "plan") setPlanFilter(value);
-            setPage(1);
+            if (key === "status") {
+              setStatusFilter(value);
+              setPage(1);
+            }
+            if (key === "city") setCityFilter(value);
           }}
           pagination={{
             page,
             pageSize: PAGE_SIZE,
-            totalItems: filtered.length,
+            totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}
           emptyState={
-            <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
-              <SearchX className="size-8 opacity-60" />
-              <p className="text-sm">
-                No customers match your search or filters.
-              </p>
-            </div>
+            loading ? (
+              <div className="space-y-2 py-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+                <SearchX className="size-8 opacity-60" />
+                <p className="text-sm">
+                  No operators match your search or filters.
+                </p>
+              </div>
+            )
           }
         />
       </main>
@@ -272,202 +337,142 @@ const OperatorsTable = () => {
           </>
         }
       >
-        <Card>
-          <CardHeader>
-            {/* <CardTitle className="text-2xl">0</CardTitle> */}
-            <CardDescription>
-              <div className="flex justify-between items-center -my-3">
-                <div className="flex items-center  gap-4">
-                  <Avatar className="size-16">
-                    <AvatarImage
-                      src="https://i.pravatar.cc/64?img=12"
-                      alt="Profile picture"
-                    />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-xl font-bold text-white">
-                      {viewRow?.name}
-                    </p>
-                    <p className="text-xs">{viewRow?.id}</p>
-                    <p className="text-xs mt-1 py-1 px-2.5 bg-status-complete w-fit text-white rounded-md">
-                      active
-                    </p>
+        {viewRow && (
+          <>
+            <Card>
+              <CardHeader>
+                <CardDescription>
+                  <div className="flex justify-between items-center -my-3">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="size-16">
+                        <AvatarImage src={viewRow.image} alt={viewRow.name} />
+                        <AvatarFallback>
+                          {viewRow.name?.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-xl font-bold text-white">
+                          {viewRow.name}
+                        </p>
+                        <p className="text-xs">{viewRow._id.slice(-6)}</p>
+                        <p
+                          className={`text-xs mt-1 py-1 px-2.5 w-fit text-white rounded-md ${
+                            viewRow.status === "active"
+                              ? "bg-status-complete"
+                              : viewRow.status === "suspended"
+                                ? "bg-status-failed"
+                                : "bg-yellow-600"
+                          }`}
+                        >
+                          {viewRow.status.replace(/_/g, " ")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <p className="text-xs">Member Since</p>
+                      <p className="font-medium text-white">
+                        {formatDate(viewRow.createdAt)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <p className="text-xs">Member Since</p>
-                  <p className=" font-medium text-white">Sep 2026</p>
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <div className="flex gap-4 ">
+              <div className="flex flex-1 items-center gap-2 border rounded-md p-2.5">
+                <Phone className="text-primary" />
+                <div>
+                  <p className="text-white text-xs">Phone</p>
+                  <p className="text-sm font-medium">{viewRow.phone}</p>
                 </div>
               </div>
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            </div>
+            <div className="flex flex-1 items-center gap-2 border rounded-md p-2.5">
+              <Building className="text-primary" />
+              <div>
+                <p className="text-white text-xs">City</p>
+                <p className="text-sm font-medium">{viewRow.city}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardDescription>
+                    <div className="flex flex-col justify-center items-center -my-3">
+                      <PhoneCall className="text-primary" size={36} />
+                      <p className="text-2xl font-bold text-white">
+                        {viewRow.totalCalls}
+                      </p>
+                      <p className="text-xs">Calls</p>
+                    </div>
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardDescription>
+                    <div className="flex flex-col justify-center items-center -my-3">
+                      <DollarSign className="text-status-complete" size={36} />
+                      <p className="text-2xl font-bold text-white">
+                        AED {viewRow.totalEarnings}
+                      </p>
+                      <p className="text-xs">Revenue</p>
+                    </div>
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
 
-        <div className="flex  gap-4 ">
-          <div className="flex flex-1 items-center gap-2 border rounded-md p-2.5">
-            <Mail className="text-primary" />
-            <div>
-              <p className="text-white text-xs">Email</p>
-              <p className="text-sm font-medium max-w-40 truncate ">
-                michael@prestigeyachts.com
-              </p>
+            {/* Monthly payout history isn't exposed by /operator/admin/:id yet —
+                surface a note instead of fabricating figures. Wire this up
+                to a real payout-history endpoint once one exists. */}
+            <div className="border rounded-md p-4 text-center text-sm text-muted-foreground">
+              Monthly payout history isn't available from this endpoint yet.
             </div>
-          </div>
-          <div className="flex  flex-1 items-center gap-2 border rounded-md p-2.5">
-            <Phone className="text-primary" />
-            <div>
-              <p className="text-white text-xs">Phone</p>
-              <p className="text-sm font-medium">+971 50 482 9930</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex  flex-1 items-center gap-2 border rounded-md p-2.5">
-          <Building className="text-primary" />
-          <div>
-            <p className="text-white text-xs">City</p>
-            <p className="text-sm font-medium">Dubai</p>
-          </div>
-        </div>
-        <div>
-          <Image
-            src={"https://avatars.githubusercontent.com/u/106336254"}
-            alt="Profile picture"
-            width={1000}
-            height={1000}
-            className="size-32 rounded"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              {/* <CardTitle className="text-2xl">0</CardTitle> */}
-              <CardDescription>
-                <div className="flex flex-col justify-center items-center -my-3">
-                  <PhoneCall className="text-primary" size={36} />
-                  <p className="text-2xl font-bold text-white">1234</p>
-                  <p className="text-xs">Calls</p>
-                </div>
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              {/* <CardTitle className="text-2xl">0</CardTitle> */}
-              <CardDescription>
-                <div className="flex flex-col justify-center items-center -my-3">
-                  <DollarSign className="text-status-complete" size={36} />
-                  <p className="text-2xl font-bold text-white">AED 12,415</p>
-                  <p className="text-xs">Revenue</p>
-                </div>
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-        <h1 className="text-white font-bold">Monthly Payout History</h1>
-
-        <div className=" border rounded-md p-2.5 max-h-72 overflow-y-auto custom-scroll  ">
-          <dl className="space-y-3 text-sm">
-            <div className="flex justify-between items-center">
-              <dt className="text-muted-foreground font-medium flex gap-1 items-center">
-                <div className="bg-[#414144] text-center rounded-full p-2   w-fit">
-                  <Banknote size={32} />
-                </div>
-                January
-              </dt>
-              <dd className="font-bold text-sm text-status-complete">
-                AED 120
-              </dd>
-            </div>
-            <div className="flex justify-between items-center">
-              <dt className="text-muted-foreground font-medium flex gap-1 items-center">
-                <div className="bg-[#414144] text-center rounded-full p-2   w-fit">
-                  <Banknote size={32} />
-                </div>
-                February
-              </dt>
-              <dd className="font-bold text-sm text-status-complete">
-                AED 120
-              </dd>
-            </div>
-            <div className="flex justify-between items-center">
-              <dt className="text-muted-foreground font-medium flex gap-1 items-center">
-                <div className="bg-[#414144] text-center rounded-full p-2   w-fit">
-                  <Banknote size={32} />
-                </div>
-                March
-              </dt>
-              <dd className="font-bold text-sm text-status-complete">
-                AED 120
-              </dd>
-            </div>
-            <div className="flex justify-between items-center">
-              <dt className="text-muted-foreground font-medium flex gap-1 items-center">
-                <div className="bg-[#414144] text-center rounded-full p-2   w-fit">
-                  <Banknote size={32} />
-                </div>
-                April
-              </dt>
-              <dd className="font-bold text-sm text-status-complete">
-                AED 120
-              </dd>
-            </div>
-            <div className="flex justify-between items-center">
-              <dt className="text-muted-foreground font-medium flex gap-1 items-center">
-                <div className="bg-[#414144] text-center rounded-full p-2   w-fit">
-                  <Banknote size={32} />
-                </div>
-                May
-              </dt>
-              <dd className="font-bold text-sm text-status-complete">
-                AED 120
-              </dd>
-            </div>
-            <div className="flex justify-between items-center">
-              <dt className="text-muted-foreground font-medium flex gap-1 items-center">
-                <div className="bg-[#414144] text-center rounded-full p-2   w-fit">
-                  <Banknote size={32} />
-                </div>
-                June
-              </dt>
-              <dd className="font-bold text-sm text-status-complete">
-                AED 120
-              </dd>
-            </div>
-          </dl>
-        </div>
+          </>
+        )}
       </Modal>
 
-      {/* Delete confirmation modal */}
+      {/* Suspend confirmation modal */}
       <Modal
-        open={!!deleteRow}
-        onClose={() => setDeleteRow(null)}
+        open={!!suspendRow}
+        onClose={() => {
+          setSuspendRow(null);
+          setSuspendReason("");
+        }}
         title="Suspend Operator"
-        description={`Temporarily suspend Ahmed Saleh from the platform`}
+        description={`Temporarily suspend ${suspendRow?.name} from the platform`}
         footer={
           <>
-            <Button variant="cancel" onClick={() => setDeleteRow(null)}>
+            <Button
+              variant="cancel"
+              onClick={() => {
+                setSuspendRow(null);
+                setSuspendReason("");
+              }}
+              disabled={isSuspending}
+            >
               Cancel
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                // call your delete API here
-                setViewRow(null);
-              }}
+              onClick={handleSuspendConfirm}
+              disabled={isSuspending || !suspendReason.trim()}
             >
-              Suspend Operator
+              {isSuspending ? "Suspending..." : "Suspend Operator"}
             </Button>
           </>
         }
       >
         <div className="space-y-1.5">
-          <Label htmlFor="name" className="text-white">
+          <Label htmlFor="suspendReason" className="text-white">
             Reason for Suspension
           </Label>
           <Textarea
-            id="name"
+            id="suspendReason"
+            value={suspendReason}
+            onChange={(e) => setSuspendReason(e.target.value)}
             placeholder="Enter the reason for suspending this operator..."
           />
         </div>

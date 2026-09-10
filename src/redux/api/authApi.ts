@@ -37,9 +37,10 @@ export const authApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.user],
     }),
+
     userPasswordChange: build.mutation<Response, any>({
       query: (body) => ({
-        url: `/auth/change-password`,
+        url: `/admin/change-password`,
         method: "PATCH",
         body,
       }),

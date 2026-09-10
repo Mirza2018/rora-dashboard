@@ -131,24 +131,6 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: [tagTypes.calls],
     }),
 
-    //Operators
-
-    getOperators: build.query<Response, any>({
-      query: (params) => ({
-        url: `/operator/admin`,
-        method: "GET",
-        params,
-      }),
-      providesTags: [tagTypes.operators],
-    }),
-    getOperatorstat: build.query<Response, any>({
-      query: () => ({
-        url: `/operator/admin/stats`,
-        method: "GET",
-      }),
-      providesTags: [tagTypes.operators],
-    }),
-
     ////Customers
 
     getCustomers: build.query<Response, any>({
@@ -174,7 +156,6 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: [tagTypes.customers],
     }),
 
- 
     transferMinute: build.mutation<Response, any>({
       query: (body) => ({
         url: `/wallet/admin/${body.id}/transfer`,
@@ -201,10 +182,126 @@ export const adminApi = baseApi.injectEndpoints({
     }),
     activeCustomer: build.mutation<Response, any>({
       query: (id) => ({
-        url: `/users/admin/${id}/active`,
+        url: `/users/admin/${id}/activate`,
         method: "PATCH",
       }),
       invalidatesTags: [tagTypes.customers],
+    }),
+    //pricing
+
+    getDestinations: build.query<Response, any>({
+      query: (params) => ({
+        url: `/destinations/admin/`,
+        method: "GET",
+        params,
+      }),
+      providesTags: [tagTypes.destinations],
+    }),
+
+    createDestination: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/destinations/admin`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [tagTypes.destinations],
+    }),
+    editDestination: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/destinations/admin/${body.id}`,
+        method: "PATCH",
+        body: body.data,
+      }),
+      invalidatesTags: [tagTypes.destinations],
+    }),
+    updateDestinationSatus: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/destinations/admin/${body.id}/status`,
+        method: "PATCH",
+        body: body.data,
+      }),
+      invalidatesTags: [tagTypes.destinations],
+    }),
+    deleteDestination: build.mutation<Response, any>({
+      query: (id) => ({
+        url: `/destinations/admin/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [tagTypes.destinations],
+    }),
+    //Operators
+
+    getOperators: build.query<Response, any>({
+      query: (params) => ({
+        url: `/operator/admin`,
+        method: "GET",
+        params,
+      }),
+      providesTags: [tagTypes.operators],
+    }),
+    getOperatorstat: build.query<Response, any>({
+      query: () => ({
+        url: `/operator/admin/stats`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.operators],
+    }),
+    verifyOperator: build.mutation<Response, any>({
+      query: (id) => ({
+        url: `/operator/admin/${id}/verify`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [tagTypes.operators],
+    }),
+
+    suspendOperator: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/operator/admin/${body.id}/suspend`,
+        method: "PATCH",
+        body: body.data,
+      }),
+      invalidatesTags: [tagTypes.operators],
+    }),
+    activeOperator: build.mutation<Response, any>({
+      query: (id) => ({
+        url: `/operator/admin/${id}/activate`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [tagTypes.operators],
+    }),
+
+    inviteOperator: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/operator/admin/invite`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [tagTypes.operators],
+    }),
+
+    ///Distributors Report
+
+    getDistributors: build.query<Response, any>({
+      query: () => ({
+        url: `/wallet/admin/distributors/report`,
+        method: "GET",
+      }),
+      // providesTags: [tagTypes.customers],
+    }),
+    getDistributorsTransfer: build.query<Response, any>({
+      query: (params) => ({
+        url: `/wallet/admin/distributors/transfers`,
+        method: "GET",
+        params,
+      }),
+      // providesTags: [tagTypes.customers],
+    }),
+    getOverview: build.query<Response, any>({
+      query: () => ({
+        url: `/admin/dashboard`,
+        method: "GET",
+      }),
+      // providesTags: [tagTypes.customers],
     }),
 
     // end
@@ -239,11 +336,6 @@ export const {
   useGetCallsQuery,
   useGetCallStatQuery,
 
-  //Operators
-
-  useGetOperatorsQuery,
-  useGetOperatorstatQuery,
-
   //Customers
 
   useGetCustomersQuery,
@@ -253,7 +345,27 @@ export const {
   useMarkDistributorMutation,
   useSuspendCustomerMutation,
   useActiveCustomerMutation,
-useLazyGetCustomersQuery
+  useLazyGetCustomersQuery,
 
+  //Pricing
 
+  useGetDestinationsQuery,
+  useCreateDestinationMutation,
+  useEditDestinationMutation,
+  useUpdateDestinationSatusMutation,
+  useDeleteDestinationMutation,
+
+  //Operators
+
+  useGetOperatorsQuery,
+  useGetOperatorstatQuery,
+  useVerifyOperatorMutation,
+  useSuspendOperatorMutation,
+  useActiveOperatorMutation,
+  useInviteOperatorMutation,
+  ///
+
+  useGetDistributorsQuery,
+  useGetDistributorsTransferQuery,
+  useGetOverviewQuery,
 } = adminApi;
