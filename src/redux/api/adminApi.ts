@@ -303,6 +303,23 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       // providesTags: [tagTypes.customers],
     }),
+    ///
+    getPolicyAndHelp: build.query<Response, any>({
+      query: () => ({
+        url: `/admin/policy`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.policy],
+    }),
+
+    updatePolicyAndHelp: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/admin/policy/${body.type}`,
+        method: "POST",
+        body: body.data,
+      }),
+      invalidatesTags: [tagTypes.policy],
+    }),
 
     // end
   }),
@@ -368,4 +385,7 @@ export const {
   useGetDistributorsQuery,
   useGetDistributorsTransferQuery,
   useGetOverviewQuery,
+  //
+  useGetPolicyAndHelpQuery,
+  useUpdatePolicyAndHelpMutation,
 } = adminApi;

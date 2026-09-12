@@ -39,6 +39,10 @@ import { useFloatingPosition } from "@/lib/use-floating-position";
 import { Portal } from "@/components/ui/portal";
 import Image from "next/image";
 import AllImages from "@/assets/AllImages";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { clearAuth } from "@/redux/slices/authSlice";
+import Cookies from "universal-cookie";
 
 type NavChild = {
   label: string;
@@ -73,11 +77,6 @@ const NAV_ITEMS: NavItem[] = [
     label: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
-    // children: [
-    //   { label: "Profile", icon: User, href: "/dashboard/settings/profile" },
-    //   { label: "Terms", icon: FileText, href: "/dashboard/settings/terms" },
-    //   { label: "Policy", icon: Shield, href: "/dashboard/settings/policy" },
-    // ],
   },
 ];
 
@@ -90,7 +89,8 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const pathname = usePathname();
   const router = useRouter();
-
+  const dispatch = useDispatch();
+const cookies = new Cookies();
   // Inline expand/collapse for the tree when the sidebar itself is expanded.
   const settingsActive = isItemActive(
     pathname,
@@ -145,6 +145,22 @@ export function AppSidebar() {
   }, [collapsed]);
 
   const flyoutItem = NAV_ITEMS.find((i) => i.label === flyoutFor) ?? null;
+
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+
+ 
+const getInitials = (name?: string) => {
+  if (!name) return "TA";
+  const parts = name.trim().split(/\s+/);
+  const initials = parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "");
+  return initials.join("") || "TA";
+};
+
+  const handleLogout = () => {
+    dispatch(clearAuth());
+    router.push("/sign-in");
+    cookies.remove("rora_dashboard_accessToken");
+  };
 
   return (
     <Sidebar className="sticky top-0">
@@ -329,23 +345,26 @@ export function AppSidebar() {
           )}
         >
           <Avatar>
-            <AvatarImage src="https://i.pravatar.cc/64" alt="Profile picture" />
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarImage
+              src={userInfo?.image}
+              alt={userInfo?.name ?? "Profile picture"}
+            />
+            <AvatarFallback>{getInitials(userInfo?.name)}</AvatarFallback>
           </Avatar>
 
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-medium text-foreground">
-                Jane Doe
+                {userInfo?.name ?? "—"}
               </p>
               <p className="truncate text-xs text-muted-foreground">
-                jane@company.com
+                {userInfo?.phone ?? "—"}
               </p>
             </div>
           )}
 
           <button
-            onClick={() => router.push("/sign-in")}
+            onClick={handleLogout}
             className={cn(
               "flex shrink-0 items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-status-failed hover:bg-white/5 transition-colors",
               collapsed && "mt-1",
