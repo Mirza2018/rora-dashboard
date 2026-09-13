@@ -196,7 +196,7 @@ const CustomersTable = () => {
       render: (row) => (
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src="" alt={row.name} />
+            <AvatarImage src={row?.image} alt={row.name} />
             <AvatarFallback>
               {row.name?.slice(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -298,12 +298,6 @@ const CustomersTable = () => {
                 { label: "Active", value: "active" },
                 { label: "Suspended", value: "suspended" },
               ],
-            },
-            {
-              key: "country",
-              placeholder: "Country",
-              value: countryFilter,
-              options: countries.map((c) => ({ label: c, value: c })),
             },
           ]}
           onFilterChange={(key, value) => {

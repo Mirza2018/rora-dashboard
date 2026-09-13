@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import {
   useGetDestinationsQuery,
   useCreateDestinationMutation,
+  useGetDestinationStatsQuery,
 } from "@/redux/api/adminApi"; // adjust to your actual path
 
 const PricingPage = () => {
@@ -27,7 +28,11 @@ const PricingPage = () => {
   const [prefix, setPrefix] = useState("");
   const [customerRate, setCustomerRate] = useState("");
   const [operatorPayout, setOperatorPayout] = useState("");
-
+  const {
+    data: statsResponse,
+    isLoading: statsLoading,
+    isFetching: statsFetching,
+  } = useGetDestinationStatsQuery(undefined);
   const {
     data: response,
     isLoading,
@@ -49,19 +54,22 @@ const PricingPage = () => {
           0,
         ) / destinations.length
       : 0;
-  const lastUpdated = destinations.reduce(
-    (latest: string | null, d: any) => {
-      if (!latest) return d.updatedAt;
-      return new Date(d.updatedAt) > new Date(latest) ? d.updatedAt : latest;
-    },
-    null as string | null,
-  );
+  // const lastUpdated = destinations.reduce(
+  //   (latest: string | null, d: any) => {
+  //     if (!latest) return d.updatedAt;
+  //     return new Date(d.updatedAt) > new Date(latest) ? d.updatedAt : latest;
+  //   },
+  //   null as string | null,
+  // );
 
-  const lastUpdatedLabel = (() => {
+  const lastUpdatedLabel = (lastUpdated?: Date | string | null) => {
     if (!lastUpdated) return "—";
+
     const d = new Date(lastUpdated);
     const now = new Date();
+
     const isToday = d.toDateString() === now.toDateString();
+
     return isToday
       ? "Today"
       : d.toLocaleDateString("en-GB", {
@@ -69,8 +77,7 @@ const PricingPage = () => {
           month: "short",
           day: "2-digit",
         });
-  })();
-
+  };
   const resetForm = () => {
     setName("");
     setPrefix("");
@@ -126,21 +133,23 @@ const PricingPage = () => {
         <Card>
           <CardHeader>
             <CardDescription>Active destinations</CardDescription>
-            {loading ? (
+            {statsLoading ? (
               <Skeleton className="h-8 w-12 mt-1" />
             ) : (
-              <CardTitle className="text-2xl">{activeCount}</CardTitle>
+              <CardTitle className="text-2xl">
+                {statsResponse?.data?.activeDestinations}
+              </CardTitle>
             )}
           </CardHeader>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Avg margin/min</CardDescription>
-            {loading ? (
+            {statsLoading ? (
               <Skeleton className="h-8 w-24 mt-1" />
             ) : (
               <CardTitle className="text-2xl">
-                AED {avgMargin.toFixed(2)}
+                AED {statsResponse?.data?.avgMarginPerMin.toFixed(2)}
               </CardTitle>
             )}
           </CardHeader>
@@ -148,10 +157,12 @@ const PricingPage = () => {
         <Card>
           <CardHeader>
             <CardDescription>Last updated</CardDescription>
-            {loading ? (
+            {statsLoading ? (
               <Skeleton className="h-8 w-20 mt-1" />
             ) : (
-              <CardTitle className="text-2xl">{lastUpdatedLabel}</CardTitle>
+              <CardTitle className="text-2xl">
+                {lastUpdatedLabel(statsResponse?.data?.lastUpdatedAt)}
+              </CardTitle>
             )}
           </CardHeader>
         </Card>

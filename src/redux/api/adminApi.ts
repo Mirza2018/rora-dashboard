@@ -197,6 +197,14 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.destinations],
     }),
+    getDestinationStats: build.query<Response, any>({
+      query: (params) => ({
+        url: `/destinations/admin/stats`,
+        method: "GET",
+        params,
+      }),
+      providesTags: [tagTypes.destinations],
+    }),
 
     createDestination: build.mutation<Response, any>({
       query: (body) => ({
@@ -329,6 +337,7 @@ export const {
   useGetAnalysisQuery,
   ///Disputes
   useGetDisputesStarQuery,
+  useGetDestinationStatsQuery,
   useGetAllDisputesQuery,
   useResolveDisputeMutation,
   useRejectDisputeMutation,
