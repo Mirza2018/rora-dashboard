@@ -32,9 +32,9 @@ const baseQuery = fetchBaseQuery({
     //   headers.set("authorization", `Bearer ${resendSignUpToken}`);
     // }
 
-    // if (resetPasswordToken) {
-    //   headers.set("Forget-password", `Forget-password ${resetPasswordToken}`);
-    // }
+    if (resetPasswordToken) {
+      headers.set("reset-token", `${resetPasswordToken}`);
+    }
 
     return headers;
   },

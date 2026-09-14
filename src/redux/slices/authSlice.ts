@@ -14,7 +14,17 @@ const initialState = {
   resendForgotPasswordToken: null as string | null,
   resetPasswordToken: null as string | null,
   userInfo: null as UserInfo | null,
+  resetFlow: {
+    phone: null,
+    otpToken: null,
+    resetToken: null,
+  } as ResetFlowState,
 };
+interface ResetFlowState {
+  phone: string | null;
+  otpToken: string | null;
+  resetToken: string | null;
+}
 
 const authSlice = createSlice({
   name: "auth",
@@ -22,6 +32,12 @@ const authSlice = createSlice({
   reducers: {
     setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
+    },
+    setResetFlow(state, action: PayloadAction<Partial<ResetFlowState>>) {
+      state.resetFlow = { ...state.resetFlow, ...action.payload };
+    },
+    clearResetFlow(state) {
+      state.resetFlow = { phone: null, otpToken: null, resetToken: null };
     },
     setSignUpToken: (state, action: PayloadAction<string>) => {
       state.signUpToken = action.payload;

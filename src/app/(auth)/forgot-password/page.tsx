@@ -1,66 +1,84 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { toast } from "sonner"
-import { Mail, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import { Phone, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useDispatch } from "react-redux";
 
-import { FormField } from "@/components/ui/form-field"
-import { Button } from "@/components/ui/button"
-import { AuthLayout } from "@/components/layout/auth-layout"
+import { FormField } from "@/components/ui/form-field";
+import { Button } from "@/components/ui/button";
+import { AuthLayout } from "@/components/layout/auth-layout";
+
+import { setAccessToken } from "@/redux/slices/authSlice";
+import { useUserForgotPasswordMutation } from "@/redux/api/authApi";
+import { normalizePhone } from "@/lib/phone";
 
 const schema = z.object({
-  email: z.string().min(1, "Email is required").email("Enter a valid email address"),
-})
+  phone: z.string().min(6, "Enter a valid phone number"),
+});
 
-type Values = z.infer<typeof schema>
+type Values = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
-  const router = useRouter()
-  const {
-    control,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = useForm<Values>({
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const [forgotPassword, { isLoading: isSubmitting }] =
+    useUserForgotPasswordMutation();
+
+  const { control, handleSubmit } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "" },
-  })
+    defaultValues: { phone: "" },
+  });
 
   async function onSubmit(values: Values) {
+    const phone = normalizePhone(values.phone);
+
     try {
-      // Replace with your real "send OTP" API call.
-      await new Promise((resolve) => setTimeout(resolve, 900))
-      console.log("forgot-password values:", values)
-      toast.success("OTP code sent to your email!")
-      router.push(`/verify-otp?email=${encodeURIComponent(values.email)}`)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send code. Please try again.")
+      const res = await forgotPassword({ phone }).unwrap();
+
+      // Store the otpToken as the access token so subsequent
+      // authenticated calls (verify-otp, resend-otp) pick it up.
+      dispatch(setAccessToken(res?.data?.otpToken));
+
+      toast.success("OTP code sent to your phone!");
+      router.push(`/otp?phone=${encodeURIComponent(phone)}`);
+    } catch (err: any) {
+      toast.error(
+        err?.data?.message ?? "Could not send code. Please try again.",
+      );
     }
   }
 
   function onInvalid() {
-    toast.error("Please fix the highlighted fields.")
+    toast.error("Please fix the highlighted fields.");
   }
 
   return (
     <AuthLayout subtitle="Reset your password">
-      <h2 className="text-base font-semibold text-foreground">Forgot Password?</h2>
+      <h2 className="text-base font-semibold text-foreground">
+        Forgot Password?
+      </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Enter your email address and we will send you a verification code
+        Enter your phone number and we will send you a verification code
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="mt-5 space-y-4" noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit, onInvalid)}
+        className="mt-5 space-y-4"
+        noValidate
+      >
         <FormField
           control={control}
-          name="email"
-          type="email"
-          label="Email Address"
-          placeholder="admin@yatos.com"
-          icon={Mail}
+          name="phone"
+          type="phone"
+          label="Phone Number"
+          placeholder="+971500000001"
+          icon={Phone}
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -76,5 +94,5 @@ export default function ForgotPasswordPage() {
         </Link>
       </form>
     </AuthLayout>
-  )
+  );
 }

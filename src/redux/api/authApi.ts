@@ -49,35 +49,40 @@ export const authApi = baseApi.injectEndpoints({
 
     userForgotPassword: build.mutation<Response, any>({
       query: (body) => ({
-        url: `/auth/forgot-password-otpByEmail`,
+        url: `/admin/forget-password`,
         method: "POST",
         body,
       }),
       invalidatesTags: [tagTypes.user],
     }),
+
     userVerifyOTP: build.mutation<Response, any>({
       query: (body) => ({
-        url: `/auth/forgot-password-otp-match`,
-        method: "PATCH",
+        url: `/admin/verify-reset-otp`,
+        method: "POST",
         body,
       }),
       invalidatesTags: [tagTypes.user],
     }),
     userResendVerifyOTP: build.mutation<Response, any>({
-      query: () => ({
-        url: `/otp/resend-email-otp`,
-        method: "PATCH",
-      }),
-      invalidatesTags: [tagTypes.user],
-    }),
-    userResetPassword: build.mutation<Response, any>({
       query: (body) => ({
-        url: `/auth/forgot-password-reset`,
-        method: "PATCH",
+        url: `/admin/resend-otp`,
+        method: "POST",
         body,
       }),
       invalidatesTags: [tagTypes.user],
     }),
+
+    userResetPassword: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/admin/reset-password`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [tagTypes.user],
+    }),
+
+    //
 
     //End
   }),
@@ -85,11 +90,11 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
   useUserLoginMutation,
+  useUserPasswordChangeMutation,
+  useUserGetProfileQuery,
+  useUserUpdateProfileMutation,
   useUserForgotPasswordMutation,
   useUserVerifyOTPMutation,
   useUserResendVerifyOTPMutation,
   useUserResetPasswordMutation,
-  useUserGetProfileQuery,
-  useUserUpdateProfileMutation,
-  useUserPasswordChangeMutation,
 } = authApi;
