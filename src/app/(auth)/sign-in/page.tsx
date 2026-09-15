@@ -14,7 +14,11 @@ import { AuthLayout } from "@/components/layout/auth-layout";
 import { useUserLoginMutation } from "@/redux/api/authApi";
 import { useDispatch } from "react-redux";
 import Cookies from "universal-cookie";
-import { setAccessToken, setUserInfo } from "@/redux/slices/authSlice";
+import {
+  clearAuth,
+  setAccessToken,
+  setUserInfo,
+} from "@/redux/slices/authSlice";
 
 const schema = z.object({
   phone: z.string().min(5, "Phone number is required"),
@@ -26,8 +30,8 @@ type Values = z.infer<typeof schema>;
 
 export default function SignInPage() {
   const [userLogin] = useUserLoginMutation();
-    const dispatch = useDispatch();
-    const cookies = new Cookies();
+  const dispatch = useDispatch();
+  const cookies = new Cookies();
   const router = useRouter();
   const {
     control,
@@ -47,35 +51,38 @@ export default function SignInPage() {
     };
 
     // return;
-   try {
-     const res = await userLogin(loginData).unwrap();
+    try {
+      const res = await userLogin(loginData).unwrap();
 
-     dispatch(setAccessToken(res?.data?.accessToken));
-     dispatch(setUserInfo(res?.data?.admin));
-     cookies.set("rora_dashboard_accessToken", res?.data?.accessToken);
-     toast.success(res.message || "Login successful", {
-       id: toastId,
-       duration: 2000,
-     });
+      dispatch(clearAuth());
+      dispatch(setAccessToken(res?.data?.accessToken));
+      dispatch(setUserInfo(res?.data?.admin));
+      cookies.set("rora_dashboard_accessToken", res?.data?.accessToken);
+      toast.success(res.message || "Login successful", {
+        id: toastId,
+        duration: 2000,
+      });
 
-     if (res?.data?.role !== "SUPER_ADMIN") {
-       return toast.warning("Please use admin Email to login Dashboard", {
-         id: toastId,
-         duration: 2000,
-       });
-     }
+      if (res?.data?.role !== "SUPER_ADMIN") {
+        return toast.warning("Please use admin Email to login Dashboard", {
+          id: toastId,
+          duration: 2000,
+        });
+      }
 
-     router.push("/dashboard/overview");
-    //  setIsLoading(false);
-   } catch (error: any) {
-     toast.error(
-       error?.data?.message || error?.error || "An error occurred during Login",
-       {
-         id: toastId,
-         duration: 2000,
-       },
-     );
-   }
+      router.push("/dashboard/overview");
+      //  setIsLoading(false);
+    } catch (error: any) {
+      toast.error(
+        error?.data?.message ||
+          error?.error ||
+          "An error occurred during Login",
+        {
+          id: toastId,
+          duration: 2000,
+        },
+      );
+    }
   }
 
   function onInvalid() {
