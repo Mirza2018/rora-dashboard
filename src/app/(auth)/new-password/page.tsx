@@ -1,19 +1,18 @@
 "use client";
 
-import * as React from "react";
-import { Suspense } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
+import { toast } from "sonner";
+import { z } from "zod";
 
-import { FormField } from "@/components/ui/form-field";
-import { Button } from "@/components/ui/button";
 import { AuthLayout } from "@/components/layout/auth-layout";
-import { setAccessToken } from "@/redux/slices/authSlice";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { useUserResetPasswordMutation } from "@/redux/api/authApi";
+import { clearAuth } from "@/redux/slices/authSlice";
 
 const schema = z
   .object({
@@ -49,7 +48,7 @@ function ResetPasswordForm() {
       }).unwrap();
 
       // Flow's done — clear the token so the user has to sign in fresh.
-      dispatch(setAccessToken(null));
+      dispatch(clearAuth());
 
       toast.success("Password reset successfully!");
       router.push("/sign-in");

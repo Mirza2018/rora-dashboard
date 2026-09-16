@@ -80,7 +80,7 @@ const DisputesTable = () => {
     if (!search) return disputes;
     const q = search.toLowerCase();
     return disputes.filter(
-      (d) =>
+      (d:any) =>
         d.customerId?.name?.toLowerCase().includes(q) ||
         d.operatorId?.name?.toLowerCase().includes(q) ||
         d.callId?.callRef?.toLowerCase().includes(q) ||

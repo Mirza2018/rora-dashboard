@@ -50,7 +50,7 @@ const CallPage = () => {
   const revenueTrend = data?.revenueTrend ?? [];
   const callsByStatusWeekly = data?.callsByStatusWeekly ?? [];
 
-  const pieData = topDestinations.map((dest, index) => ({
+  const pieData = topDestinations.map((dest:any, index:number) => ({
     label: dest.name,
     value: dest.calls,
     color: DESTINATION_COLORS[index % DESTINATION_COLORS.length],
@@ -78,29 +78,29 @@ const CallPage = () => {
 
     rows.push("Revenue Trend");
     rows.push("Date,Revenue");
-    revenueTrend.forEach((r) => rows.push(`${r.date},${r.revenue}`));
+    revenueTrend.forEach((r: any) => rows.push(`${r.date},${r.revenue}`));
     rows.push("");
 
     rows.push("Calls By Status (Weekly)");
     rows.push("Day Of Week,Count");
-    callsByStatusWeekly.forEach((r) => rows.push(`${r.dayOfWeek},${r.count}`));
+    callsByStatusWeekly.forEach((r: any) => rows.push(`${r.dayOfWeek},${r.count}`));
     rows.push("");
 
     rows.push("Top Operators");
     rows.push("Name,Calls,Earnings");
-    topOperators.forEach((o) =>
+    topOperators.forEach((o: any) =>
       rows.push(`${escapeCsv(o.name)},${o.calls},${o.earnings}`),
     );
     rows.push("");
 
     rows.push("Top Customers");
     rows.push("Name,Spend");
-    topCustomers.forEach((c) => rows.push(`${escapeCsv(c.name)},${c.spend}`));
+    topCustomers.forEach((c:any) => rows.push(`${escapeCsv(c.name)},${c.spend}`));
     rows.push("");
 
     rows.push("Top Destinations");
     rows.push("Name,Calls");
-    topDestinations.forEach((d) =>
+    topDestinations.forEach((d:any) =>
       rows.push(`${escapeCsv(d.name)},${d.calls}`),
     );
 
@@ -253,7 +253,7 @@ const CallPage = () => {
               ) : topOperators.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No data yet</p>
               ) : (
-                topOperators.map((operator, index) => (
+                topOperators.map((operator:any, index:number) => (
                   <div
                     key={operator._id}
                     className="border p-2.5 rounded-2xl flex justify-between items-center"
@@ -301,7 +301,7 @@ const CallPage = () => {
               ) : topCustomers.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No data yet</p>
               ) : (
-                topCustomers.map((customer, index) => (
+                topCustomers.map((customer:any, index:number) => (
                   <div
                     key={customer._id}
                     className="border p-2.5 rounded-2xl flex justify-between items-center"

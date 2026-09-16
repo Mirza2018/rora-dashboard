@@ -101,7 +101,7 @@ const OperatorsTable = () => {
 
   // Client-side search + city filter on the currently loaded page.
   const filtered = React.useMemo(() => {
-    return operators.filter((o) => {
+    return operators.filter((o:any) => {
       const matchesSearch =
         !search ||
         o.name.toLowerCase().includes(search.toLowerCase()) ||

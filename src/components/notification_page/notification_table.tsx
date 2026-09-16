@@ -57,7 +57,7 @@ const NotificationTable = () => {
   const filtered = React.useMemo(() => {
     if (!search) return notifications;
     const q = search.toLowerCase();
-    return notifications.filter((n) => n.title.toLowerCase().includes(q));
+    return notifications.filter((n:any) => n.title.toLowerCase().includes(q));
   }, [notifications, search]);
 
   const columns: DataTableColumn<Notification>[] = [

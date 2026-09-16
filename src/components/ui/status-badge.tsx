@@ -23,6 +23,8 @@ const statusBadgeVariants = cva(
       status: {
         complete:
           "bg-status-complete/10 text-status-complete border-status-complete/30",
+        approved:
+          "bg-status-complete/10 text-status-complete border-status-complete/30",
         verified:
           "bg-status-complete/10 text-status-complete border-status-complete/30",
 
@@ -48,6 +50,8 @@ const statusBadgeVariants = cva(
 
         rejected:
           "bg-status-rejected/10 text-status-rejected border-status-rejected/30",
+        reject:
+          "bg-status-rejected/10 text-status-rejected border-status-rejected/30",
 
         paid: "bg-status-paid/10 text-status-paid border-status-paid/30",
 
@@ -63,6 +67,7 @@ const statusBadgeVariants = cva(
 
 const statusIcons = {
   complete: CircleCheckBig,
+  approved: CircleCheckBig,
   verified: BadgeCheck,
   failed: CircleX,
   pending: Clock3,
@@ -72,6 +77,7 @@ const statusIcons = {
   open: FolderOpen,
   resolved: BadgeCheck,
   rejected: XCircle,
+  reject: XCircle,
   paid: Wallet,
   delivered: PackageCheck,
 } as const;

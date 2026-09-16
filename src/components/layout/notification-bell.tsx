@@ -55,14 +55,14 @@ export function NotificationBell() {
   }, []);
 
   const unreadCount = React.useMemo(
-    () => recent.filter((n) => !seenIds.has(n._id)).length,
+    () => recent.filter((n: any) => !seenIds.has(n._id)).length,
     [recent, seenIds],
   );
 
   const markAllAsRead = React.useCallback(() => {
     setSeenIds((prev) => {
       const next = new Set(prev);
-      recent.forEach((n) => next.add(n._id));
+      recent.forEach((n:any) => next.add(n._id));
       writeSeenIds(next);
       return next;
     });
@@ -134,7 +134,7 @@ export function NotificationBell() {
                   <p className="text-sm">No notifications yet.</p>
                 </div>
               ) : (
-                recent.map((n) => (
+                recent.map((n:any) => (
                   <div
                     key={n._id}
                     className="border-card-border flex gap-3 border-b px-4 py-3 last:border-0 hover:bg-white/[0.03]"

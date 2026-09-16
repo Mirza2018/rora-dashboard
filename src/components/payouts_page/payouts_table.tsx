@@ -83,7 +83,7 @@ const PayoutsTable = () => {
     if (!search) return payouts;
     const q = search.toLowerCase();
     return payouts.filter(
-      (p) =>
+      (p:any) =>
         p.operatorId?.name?.toLowerCase().includes(q) ||
         p.payoutRef?.toLowerCase().includes(q),
     );

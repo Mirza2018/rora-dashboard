@@ -12,18 +12,17 @@ import {
   OctagonAlert,
   PhoneCall,
   Settings,
-  Shield,
-  Sparkles,
   Tag,
-  User,
   UserCog,
-  Users,
+  Users
 } from "lucide-react";
-import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import * as React from "react";
 
+import AllImages from "@/assets/AllImages";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Portal } from "@/components/ui/portal";
 import {
   Sidebar,
   SidebarContent,
@@ -34,14 +33,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 import { useFloatingPosition } from "@/lib/use-floating-position";
-import { Portal } from "@/components/ui/portal";
-import Image from "next/image";
-import AllImages from "@/assets/AllImages";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
+import { cn } from "@/lib/utils";
 import { clearAuth } from "@/redux/slices/authSlice";
+import { RootState } from "@/redux/store";
+import Image from "next/image";
+import { useDispatch, useSelector } from "react-redux";
 import Cookies from "universal-cookie";
 
 type NavChild = {
@@ -146,7 +143,7 @@ const cookies = new Cookies();
 
   const flyoutItem = NAV_ITEMS.find((i) => i.label === flyoutFor) ?? null;
 
-  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+  const userInfo:any = useSelector((state: RootState) => state.auth.userInfo);
 
  
 const getInitials = (name?: string) => {

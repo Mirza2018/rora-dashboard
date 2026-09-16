@@ -45,6 +45,7 @@ type Customer = {
   calls: number;
   spendMtd: number;
   country: string;
+  image: string;
 };
 
 const PAGE_SIZE = 20;
@@ -107,14 +108,14 @@ const CustomersTable = () => {
     useGetCustomerDetailsQuery(viewRow?._id, { skip: !viewRow });
   const details = detailsResponse?.data;
 
-  const countries = React.useMemo(
-    () => Array.from(new Set(customers.map((c) => c.country))).sort(),
-    [customers],
-  );
+  // const countries = React.useMemo(
+  //   () => Array.from(new Set(customers.map((c) => c.country))).sort(),
+  //   [customers],
+  // );
 
   // Client-side search + country filter on the currently loaded page.
   const filtered = React.useMemo(() => {
-    return customers.filter((c) => {
+    return customers.filter((c:any) => {
       const matchesSearch =
         !search ||
         c.name.toLowerCase().includes(search.toLowerCase()) ||

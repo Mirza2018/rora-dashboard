@@ -13,7 +13,7 @@ import Cookies from "universal-cookie";
 
 export function Topbar() {
   const router = useRouter();
-  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+  const userInfo:any = useSelector((state: RootState) => state.auth.userInfo);
   const dispatch = useDispatch();
   const cookies = new Cookies();
   const getInitials = (name?: string) => {
