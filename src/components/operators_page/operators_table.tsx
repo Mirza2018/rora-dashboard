@@ -182,6 +182,7 @@ const OperatorsTable = () => {
       ),
     },
     { key: "phone", header: "Phone" },
+    { key: "invitationCode", header: "Code" },
     { key: "city", header: "City" },
     {
       key: "status",
