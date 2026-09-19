@@ -57,11 +57,10 @@ export default function SignInPage() {
       dispatch(clearAuth());
       dispatch(setAccessToken(res?.data?.accessToken));
       dispatch(setUserInfo(res?.data?.admin));
-     cookies.set("rora_dashboard_accessToken", res?.data?.accessToken, {
-       path: "/",
-       sameSite: "lax",
-       secure: true, 
-     });
+      cookies.set("rora_dashboard_accessToken", res?.data?.accessToken, {
+        path: "/",
+        sameSite: "lax",
+      });
       toast.success(res.message || "Login successful", {
         id: toastId,
         duration: 2000,
@@ -74,8 +73,9 @@ export default function SignInPage() {
         });
       }
 
-      router.push("/dashboard/overview");
-      router.refresh();
+      // router.push("/dashboard/overview");
+      // router.refresh();
+      window.location.assign("/dashboard/overview");
       //  setIsLoading(false);
     } catch (error: any) {
       toast.error(
