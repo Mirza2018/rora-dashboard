@@ -76,12 +76,13 @@ const CustomersPage = () => {
 
   return (
     <main className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex sm:flex-row flex-col items-center justify-between">
         <div>
           <h1 className="text-title text-3xl font-bold">Customers</h1>
           <p className="text-muted-foreground ">All RORA app users worldwide</p>
         </div>
-        <div className="flex gap-3">
+
+        <div className="flex justify-end gap-3  w-full">
           <Button onClick={handleExport} disabled={isExporting}>
             <Download className="size-4" />
             {isExporting ? "Exporting..." : "Export"}

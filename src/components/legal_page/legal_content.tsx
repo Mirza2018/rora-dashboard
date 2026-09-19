@@ -13,6 +13,7 @@ import {
 } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 import { useGetPolicyAndHelpQuery } from "@/redux/api/adminApi"; // adjust to your actual path
+import { cn } from "@/lib/utils";
 
 type Policy = {
   _id: string;
@@ -86,12 +87,12 @@ const LegalContent = () => {
               {estimatePages(policy.content) !== 1 ? "s" : ""}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className={`${cn("sm:px-4 px-0")} space-y-6`}>
             <div className="flex gap-3 pt-2">
               <Button
                 onClick={() => router.push(`/dashboard/legal/${policy.type}`)}
                 variant="default"
-                className="flex-1 bg-white! text-black! cursor-pointer"
+                className="flex-1 bg-white! text-black! cursor-pointer "
               >
                 <Eye /> Preview
               </Button>
@@ -99,7 +100,9 @@ const LegalContent = () => {
                 onClick={() =>
                   router.push(`/dashboard/legal/${policy.type}/edit`)
                 }
-                className="flex-1 cursor-pointer"
+                className={`flex-1 cursor-pointer ${cn(
+                  "px-0 sm:px-4",
+                )}`}
               >
                 <SquarePen />
                 Edit

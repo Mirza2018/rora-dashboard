@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleCheckBig, Info, Mail, Shield, User, Camera } from "lucide-react";
+import { CircleCheckBig, Info, Mail, Shield, User, Camera, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import React from "react";
@@ -319,25 +319,22 @@ const ProfileSecurity = () => {
         </Card>
       </div>
 
-      <div className="flex justify-between items-center gap-2 border border-border bg-card rounded-lg p-4 mt-5">
+      <div className="flex justify-between items-center sm:flex-row flex-col gap-2 border border-border bg-card rounded-lg p-4 mt-5">
         <div className="flex items-center gap-2 ">
           <div className="p-3 rounded-2xl bg-white w-fit">
-            <Mail className="text-primary" />
+            <Phone className="text-primary" />
           </div>
           <div>
             <p className="text-white font-bold text-sm">
               Need to Reset Your Password?
             </p>
             <p className="text-xs">
-              Forgot your password? We&apos;ll send a secure reset link to
-              <span className="text-primary">
-                {" "}
-                {profile?.email ?? "your email"}
-              </span>
+              Forgot your password? Click the reset password button to reset it.
+
             </p>
           </div>
         </div>
-        <Button onClick={() => router.push("/reset-password")} className="">
+        <Button onClick={() => router.push("/forgot-password")} className="">
           Reset Your Password
         </Button>
       </div>

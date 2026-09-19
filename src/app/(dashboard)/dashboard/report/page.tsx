@@ -17,6 +17,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetDistributorsQuery } from "@/redux/api/adminApi"; // adjust to your actual path
+import AllImages from "@/assets/AllImages";
 
 const formatRelativeTime = (iso?: string) => {
   if (!iso) return "—";
@@ -220,9 +221,11 @@ const CallPage = () => {
                 <CardDescription>
                   <div className="flex justify-between items-center -my-3">
                     <div className="flex items-center gap-4">
+                
+                      
                       <Avatar className="size-16">
                         <AvatarImage
-                          src={topPerformer.image}
+                          src={topPerformer?.image || AllImages.placeholder.src}
                           alt={topPerformer.name}
                         />
                         <AvatarFallback>

@@ -32,6 +32,7 @@ import {
   useSuspendCustomerMutation,
   useActiveCustomerMutation,
 } from "@/redux/api/adminApi"; // adjust to your actual path
+import AllImages from "@/assets/AllImages";
 
 // ── API-shaped customer type (list row) ───────────────────────
 type Customer = {
@@ -197,7 +198,10 @@ const CustomersTable = () => {
       render: (row) => (
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src={row?.image} alt={row.name} />
+            <AvatarImage
+              src={row?.image || AllImages.placeholder.src}
+              alt={row.name}
+            />
             <AvatarFallback>
               {row.name?.slice(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -365,7 +369,10 @@ const CustomersTable = () => {
                   <div className="flex justify-between items-center -my-3">
                     <div className="flex items-center gap-4">
                       <Avatar className="size-16">
-                        <AvatarImage src={details.image} alt={details.name} />
+                        <AvatarImage
+                          src={details.image || AllImages.placeholder.src}
+                          alt={details.name}
+                        />
                         <AvatarFallback>
                           {details.name?.slice(0, 2).toUpperCase()}
                         </AvatarFallback>

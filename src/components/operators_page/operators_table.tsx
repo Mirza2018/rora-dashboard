@@ -31,6 +31,7 @@ import {
   useSuspendOperatorMutation,
   useActiveOperatorMutation,
 } from "@/redux/api/adminApi"; // adjust to your actual path
+import AllImages from "@/assets/AllImages";
 
 // ── API-shaped operator type ───────────────────────────────────
 type OperatorStatus = "active" | "suspended" | "pending_verification";
@@ -101,7 +102,7 @@ const OperatorsTable = () => {
 
   // Client-side search + city filter on the currently loaded page.
   const filtered = React.useMemo(() => {
-    return operators.filter((o:any) => {
+    return operators.filter((o: any) => {
       const matchesSearch =
         !search ||
         o.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -165,7 +166,10 @@ const OperatorsTable = () => {
       render: (row) => (
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src={row.image} alt={row.name} />
+            <AvatarImage
+              src={row.image || AllImages.placeholder.src}
+              alt={row.name}
+            />
             <AvatarFallback>
               {row.name?.slice(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -345,7 +349,10 @@ const OperatorsTable = () => {
                   <div className="flex justify-between items-center -my-3">
                     <div className="flex items-center gap-4">
                       <Avatar className="size-16">
-                        <AvatarImage src={viewRow.image} alt={viewRow.name} />
+                        <AvatarImage
+                          src={viewRow.image || AllImages.placeholder.src}
+                          alt={viewRow.name}
+                        />
                         <AvatarFallback>
                           {viewRow.name?.slice(0, 2).toUpperCase()}
                         </AvatarFallback>

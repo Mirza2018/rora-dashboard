@@ -273,7 +273,7 @@ export function DataTable<T>({
             <div />
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:flex-row flex-col">
             {searchable && (
               <div className="relative">
                 {searchIconPosition === "left" && (
@@ -295,13 +295,15 @@ export function DataTable<T>({
               </div>
             )}
 
-            {filters.map((filter) => (
-              <FilterDropdown
-                key={filter.key}
-                filter={filter}
-                onChange={onFilterChange}
-              />
-            ))}
+            <div className="flex justify-end gap-2  w-full">
+              {filters.map((filter) => (
+                <FilterDropdown
+                  key={filter.key}
+                  filter={filter}
+                  onChange={onFilterChange}
+                />
+              ))}{" "}
+            </div>
           </div>
         </div>
       )}

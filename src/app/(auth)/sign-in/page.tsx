@@ -57,7 +57,11 @@ export default function SignInPage() {
       dispatch(clearAuth());
       dispatch(setAccessToken(res?.data?.accessToken));
       dispatch(setUserInfo(res?.data?.admin));
-      cookies.set("rora_dashboard_accessToken", res?.data?.accessToken);
+     cookies.set("rora_dashboard_accessToken", res?.data?.accessToken, {
+       path: "/",
+       sameSite: "lax",
+       secure: true, 
+     });
       toast.success(res.message || "Login successful", {
         id: toastId,
         duration: 2000,
@@ -71,6 +75,7 @@ export default function SignInPage() {
       }
 
       router.push("/dashboard/overview");
+      router.refresh();
       //  setIsLoading(false);
     } catch (error: any) {
       toast.error(

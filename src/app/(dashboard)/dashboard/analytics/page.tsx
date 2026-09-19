@@ -50,7 +50,7 @@ const CallPage = () => {
   const revenueTrend = data?.revenueTrend ?? [];
   const callsByStatusWeekly = data?.callsByStatusWeekly ?? [];
 
-  const pieData = topDestinations.map((dest:any, index:number) => ({
+  const pieData = topDestinations.map((dest: any, index: number) => ({
     label: dest.name,
     value: dest.calls,
     color: DESTINATION_COLORS[index % DESTINATION_COLORS.length],
@@ -83,7 +83,9 @@ const CallPage = () => {
 
     rows.push("Calls By Status (Weekly)");
     rows.push("Day Of Week,Count");
-    callsByStatusWeekly.forEach((r: any) => rows.push(`${r.dayOfWeek},${r.count}`));
+    callsByStatusWeekly.forEach((r: any) =>
+      rows.push(`${r.dayOfWeek},${r.count}`),
+    );
     rows.push("");
 
     rows.push("Top Operators");
@@ -95,12 +97,14 @@ const CallPage = () => {
 
     rows.push("Top Customers");
     rows.push("Name,Spend");
-    topCustomers.forEach((c:any) => rows.push(`${escapeCsv(c.name)},${c.spend}`));
+    topCustomers.forEach((c: any) =>
+      rows.push(`${escapeCsv(c.name)},${c.spend}`),
+    );
     rows.push("");
 
     rows.push("Top Destinations");
     rows.push("Name,Calls");
-    topDestinations.forEach((d:any) =>
+    topDestinations.forEach((d: any) =>
       rows.push(`${escapeCsv(d.name)},${d.calls}`),
     );
 
@@ -121,14 +125,15 @@ const CallPage = () => {
 
   return (
     <main className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex sm:flex-row flex-col items-center justify-between">
         <div>
           <h1 className="text-title text-3xl font-bold">Analytics</h1>
           <p className="text-muted-foreground ">
             Detailed analytics across revenue, calls, operators and customers
           </p>
         </div>
-        <div className="flex gap-3">
+
+        <div className="flex justify-end gap-3  w-full">
           <div className="space-y-1.5">
             <Select
               placeholder="Select time period"
@@ -253,7 +258,7 @@ const CallPage = () => {
               ) : topOperators.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No data yet</p>
               ) : (
-                topOperators.map((operator:any, index:number) => (
+                topOperators.map((operator: any, index: number) => (
                   <div
                     key={operator._id}
                     className="border p-2.5 rounded-2xl flex justify-between items-center"
@@ -301,7 +306,7 @@ const CallPage = () => {
               ) : topCustomers.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No data yet</p>
               ) : (
-                topCustomers.map((customer:any, index:number) => (
+                topCustomers.map((customer: any, index: number) => (
                   <div
                     key={customer._id}
                     className="border p-2.5 rounded-2xl flex justify-between items-center"
