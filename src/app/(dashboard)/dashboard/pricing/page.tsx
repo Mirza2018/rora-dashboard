@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -12,14 +12,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Modal } from "@/components/ui/modal";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Modal } from "@/components/ui/modal";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useGetDestinationsQuery,
   useCreateDestinationMutation,
-  useGetDestinationStatsQuery,
+  useGetDestinationStatsQuery
 } from "@/redux/api/adminApi"; // adjust to your actual path
 
 const PricingPage = () => {
@@ -33,16 +32,10 @@ const PricingPage = () => {
     isLoading: statsLoading,
     isFetching: statsFetching,
   } = useGetDestinationStatsQuery(undefined);
-  const {
-    data: response,
-    isLoading,
-    isFetching,
-  } = useGetDestinationsQuery(undefined);
+  
   const [createDestination, { isLoading: isCreating }] =
     useCreateDestinationMutation();
 
-  const loading = isLoading || isFetching;
-  const destinations = response?.data ?? [];
 
 
 
@@ -237,7 +230,7 @@ const PricingPage = () => {
         </div>
       </Modal>
 
-      <PricingTable destinations={destinations} loading={loading} />
+      <PricingTable  />
     </main>
   );
 };

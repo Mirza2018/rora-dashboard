@@ -1,38 +1,31 @@
 "use client";
 
 import {
-  Banknote,
   Building,
-  DollarSign,
   Eye,
   Phone,
-  PhoneCall,
-  SearchX,
-  TriangleAlert,
-  RotateCcw,
-  BadgeCheck,
+  SearchX
 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
+import AllImages from "@/assets/AllImages";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Card, CardDescription, CardHeader } from "../ui/card";
-import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
-import { DropdownMenu } from "../ui/dropdown-menu";
 import {
-  useGetOperatorsQuery,
-  useVerifyOperatorMutation,
-  useSuspendOperatorMutation,
   useActiveOperatorMutation,
   useGetInviteOperatorsQuery,
+  useSuspendOperatorMutation,
+  useVerifyOperatorMutation
 } from "@/redux/api/adminApi"; // adjust to your actual path
-import AllImages from "@/assets/AllImages";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Card, CardDescription, CardHeader } from "../ui/card";
+import { DropdownMenu } from "../ui/dropdown-menu";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 
 // ── API-shaped operator type ───────────────────────────────────
 type OperatorStatus = "pending" | "used";
@@ -44,6 +37,7 @@ type Operator = {
   image?: string;
   status: OperatorStatus;
   createdAt: string;
+  expiresAt: string;
   city: string;
   isVerified: boolean;
   totalCalls: number;
@@ -346,17 +340,7 @@ const InviteOperatorsTable = () => {
                           {viewRow.name}
                         </p>
                         <p className="text-xs">{viewRow._id.slice(-6)}</p>
-                        <p
-                          className={`text-xs mt-1 py-1 px-2.5 w-fit text-white rounded-md ${
-                            viewRow.status === "active"
-                              ? "bg-status-complete"
-                              : viewRow.status === "suspended"
-                                ? "bg-status-failed"
-                                : "bg-yellow-600"
-                          }`}
-                        >
-                          {viewRow.status.replace(/_/g, " ")}
-                        </p>
+
                       </div>
                     </div>
                     <div className="flex flex-col items-end">
