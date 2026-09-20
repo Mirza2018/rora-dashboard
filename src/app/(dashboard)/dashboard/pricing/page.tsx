@@ -44,23 +44,7 @@ const PricingPage = () => {
   const loading = isLoading || isFetching;
   const destinations = response?.data ?? [];
 
-  const activeCount = destinations.filter(
-    (d: any) => d.status === "active",
-  ).length;
-  const avgMargin =
-    destinations.length > 0
-      ? destinations.reduce(
-          (sum: number, d: any) => sum + (d.marginPerMin ?? 0),
-          0,
-        ) / destinations.length
-      : 0;
-  // const lastUpdated = destinations.reduce(
-  //   (latest: string | null, d: any) => {
-  //     if (!latest) return d.updatedAt;
-  //     return new Date(d.updatedAt) > new Date(latest) ? d.updatedAt : latest;
-  //   },
-  //   null as string | null,
-  // );
+
 
   const lastUpdatedLabel = (lastUpdated?: Date | string | null) => {
     if (!lastUpdated) return "—";

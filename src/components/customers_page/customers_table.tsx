@@ -49,7 +49,14 @@ type Customer = {
   image: string;
 };
 
-const PAGE_SIZE = 20;
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = React.useState(value);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -66,6 +73,7 @@ const CustomersTable = () => {
   const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
   const [countryFilter, setCountryFilter] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
+    const debouncedSearch = useDebouncedValue(search, 400);
 
   // Modal state
   const [viewRow, setViewRow] = React.useState<Customer | null>(null);
@@ -87,8 +95,9 @@ const CustomersTable = () => {
     isFetching,
   } = useGetCustomersQuery({
     page,
-    limit: PAGE_SIZE,
+    limit: 10,
     ...(statusFilter ? { status: statusFilter } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
 
   const loading = isLoading || isFetching;
@@ -115,16 +124,7 @@ const CustomersTable = () => {
   // );
 
   // Client-side search + country filter on the currently loaded page.
-  const filtered = React.useMemo(() => {
-    return customers.filter((c:any) => {
-      const matchesSearch =
-        !search ||
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.phone.toLowerCase().includes(search.toLowerCase());
-      const matchesCountry = !countryFilter || c.country === countryFilter;
-      return matchesSearch && matchesCountry;
-    });
-  }, [customers, search, countryFilter]);
+
 
   const resetSuspendForm = () => setSuspendReason("");
   const resetDistributorForm = () => {
@@ -287,7 +287,7 @@ const CustomersTable = () => {
         <DataTable
           title="All Customers"
           columns={columns}
-          data={filtered}
+          data={customers}
           rowKey={(row) => row._id}
           loading={loading}
           searchable
@@ -314,7 +314,7 @@ const CustomersTable = () => {
           }}
           pagination={{
             page,
-            pageSize: PAGE_SIZE,
+            pageSize: 10,
             totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}

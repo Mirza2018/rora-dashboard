@@ -40,7 +40,7 @@ type Call = {
 };
 
 
-const SEARCH_DEBOUNCE_MS = 400;
+
 
 const STATUS_OPTIONS: { label: string; value: CallStatus }[] = [
   { label: "Requested", value: "requested" },
@@ -132,7 +132,7 @@ const CallsTable = () => {
 
   const [viewRow, setViewRow] = React.useState<Call | null>(null);
 
-  const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
+  const debouncedSearch = useDebouncedValue(search, 400);
 
   const {
     data: response,
@@ -140,7 +140,7 @@ const CallsTable = () => {
     isFetching,
   } = useGetCallsQuery({
     page,
-    limit: 8,
+    limit: 10,
     ...(statusFilter ? { status: statusFilter } : {}),
     ...(daysFilter ? { days: daysFilter } : {}),
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
@@ -248,7 +248,7 @@ const CallsTable = () => {
           }}
           pagination={{
             page,
-            pageSize: 8,
+            pageSize: 10,
             totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}

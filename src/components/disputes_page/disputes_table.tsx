@@ -31,7 +31,14 @@ type Dispute = {
   createdAt: string;
 };
 
-const PAGE_SIZE = 20;
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = React.useState(value);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -47,7 +54,7 @@ const DisputesTable = () => {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
-
+    const debouncedSearch = useDebouncedValue(search, 400);
   // Modal + form state
   const [viewRow, setViewRow] = React.useState<Dispute | null>(null);
   const [refundAmount, setRefundAmount] = React.useState("");
@@ -59,8 +66,9 @@ const DisputesTable = () => {
     isFetching,
   } = useGetAllDisputesQuery({
     page,
-    limit: PAGE_SIZE,
+    limit: 10,
     ...(statusFilter ? { status: statusFilter } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
 
   const [resolveDispute, { isLoading: isResolving }] =
@@ -76,17 +84,7 @@ const DisputesTable = () => {
   // Note: since /disputes doesn't document a search param, this only
   // filters within the current page's results. If the backend adds a
   // `search` query param, pass it into useGetAllDisputesQuery instead.
-  const filtered = React.useMemo(() => {
-    if (!search) return disputes;
-    const q = search.toLowerCase();
-    return disputes.filter(
-      (d:any) =>
-        d.customerId?.name?.toLowerCase().includes(q) ||
-        d.operatorId?.name?.toLowerCase().includes(q) ||
-        d.callId?.callRef?.toLowerCase().includes(q) ||
-        d.disputeRef?.toLowerCase().includes(q),
-    );
-  }, [disputes, search]);
+
 
   const resetForm = () => {
     setRefundAmount("");
@@ -192,7 +190,7 @@ const DisputesTable = () => {
         <DataTable
           title="All Disputes"
           columns={columns}
-          data={filtered}
+          data={disputes}
           rowKey={(row) => row._id}
           loading={loading}
           searchable
@@ -217,7 +215,7 @@ const DisputesTable = () => {
           }}
           pagination={{
             page,
-            pageSize: PAGE_SIZE,
+            pageSize: 10,
             totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}

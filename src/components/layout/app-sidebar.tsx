@@ -14,6 +14,7 @@ import {
   Settings,
   Tag,
   UserCog,
+  UserRoundPlus,
   Users
 } from "lucide-react";
 import Link from "next/link";
@@ -59,6 +60,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Analytics", icon: ChartColumn, href: "/dashboard/analytics" },
   { label: "Calls", icon: PhoneCall, href: "/dashboard/calls" },
   { label: "Operators", icon: UserCog, href: "/dashboard/operator" },
+  {
+    label: "Invite Operators",
+    icon: UserRoundPlus,
+    href: "/dashboard/invite-operator",
+  },
   { label: "Customers", icon: Users, href: "/dashboard/customers" },
 
   { label: "Disputes", icon: OctagonAlert, href: "/dashboard/disputes" },

@@ -32,7 +32,14 @@ type Payout = {
   createdAt: string;
 };
 
-const PAGE_SIZE = 20;
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = React.useState(value);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -50,7 +57,7 @@ const PayoutsTable = () => {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
-
+  const debouncedSearch = useDebouncedValue(search, 400);
   // Modal state
   const [viewRow, setViewRow] = React.useState<Payout | null>(null);
   const [paidRow, setPaidRow] = React.useState<Payout | null>(null);
@@ -64,8 +71,9 @@ const PayoutsTable = () => {
     isFetching,
   } = useGetAllPayoutQuery({
     page,
-    limit: PAGE_SIZE,
+    limit: 10,
     ...(statusFilter ? { status: statusFilter } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
 
   const [approvePayout, { isLoading: isApproving }] =
@@ -83,7 +91,7 @@ const PayoutsTable = () => {
     if (!search) return payouts;
     const q = search.toLowerCase();
     return payouts.filter(
-      (p:any) =>
+      (p: any) =>
         p.operatorId?.name?.toLowerCase().includes(q) ||
         p.payoutRef?.toLowerCase().includes(q),
     );
@@ -222,7 +230,7 @@ const PayoutsTable = () => {
           }}
           pagination={{
             page,
-            pageSize: PAGE_SIZE,
+            pageSize: 10,
             totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}

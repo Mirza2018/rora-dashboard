@@ -278,13 +278,22 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: [tagTypes.operators],
     }),
 
+    getInviteOperators: build.query<Response, any>({
+      query: (params) => ({
+        url: `/operator/admin/invitations`,
+        method: "GET",
+        params,
+      }),
+      providesTags: [tagTypes.inviteOperators],
+    }),
+
     inviteOperator: build.mutation<Response, any>({
       query: (body) => ({
         url: `/operator/admin/invite`,
         method: "POST",
         body,
       }),
-      invalidatesTags: [tagTypes.operators],
+      invalidatesTags: [tagTypes.inviteOperators],
     }),
 
     ///Distributors Report
@@ -388,6 +397,7 @@ export const {
   useVerifyOperatorMutation,
   useSuspendOperatorMutation,
   useActiveOperatorMutation,
+  useGetInviteOperatorsQuery,
   useInviteOperatorMutation,
   ///
 

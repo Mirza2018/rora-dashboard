@@ -25,6 +25,8 @@ const statusBadgeVariants = cva(
           "bg-status-complete/10 text-status-complete border-status-complete/30",
         approved:
           "bg-status-complete/10 text-status-complete border-status-complete/30",
+        used:
+          "bg-status-complete/10 text-status-complete border-status-complete/30",
         verified:
           "bg-status-complete/10 text-status-complete border-status-complete/30",
 
@@ -68,6 +70,7 @@ const statusBadgeVariants = cva(
 const statusIcons = {
   complete: CircleCheckBig,
   approved: CircleCheckBig,
+  used: CircleCheckBig,
   verified: BadgeCheck,
   failed: CircleX,
   pending: Clock3,

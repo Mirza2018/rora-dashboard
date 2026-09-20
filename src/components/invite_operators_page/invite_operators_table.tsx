@@ -30,11 +30,12 @@ import {
   useVerifyOperatorMutation,
   useSuspendOperatorMutation,
   useActiveOperatorMutation,
+  useGetInviteOperatorsQuery,
 } from "@/redux/api/adminApi"; // adjust to your actual path
 import AllImages from "@/assets/AllImages";
 
 // ── API-shaped operator type ───────────────────────────────────
-type OperatorStatus = "active" | "suspended" | "pending_verification";
+type OperatorStatus = "pending" | "used";
 
 type Operator = {
   _id: string;
@@ -50,8 +51,6 @@ type Operator = {
   availabilityStatus: "online" | "offline" | "busy";
 };
 
-
-
 const formatDate = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -64,15 +63,13 @@ const formatDate = (iso: string) => {
 
 // Map API status -> badge tokens your StatusBadge already understands.
 const statusBadgeMap: Record<OperatorStatus, string> = {
-  active: "active",
-  suspended: "suspended",
-  pending_verification: "pending",
+  used: "used",
+  pending: "pending",
 };
 
-const OperatorsTable = () => {
+const InviteOperatorsTable = () => {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
-  const [cityFilter, setCityFilter] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
 
   const [viewRow, setViewRow] = React.useState<Operator | null>(null);
@@ -83,7 +80,7 @@ const OperatorsTable = () => {
     data: response,
     isLoading,
     isFetching,
-  } = useGetOperatorsQuery({
+  } = useGetInviteOperatorsQuery({
     page,
     limit: 10,
     ...(statusFilter ? { status: statusFilter } : {}),
@@ -91,7 +88,7 @@ const OperatorsTable = () => {
   });
 
   const loading = isLoading || isFetching;
-  const operators = response?.data?.operators ?? [];
+  const operators = response?.data?.invitations ?? [];
   const meta = response?.data?.meta;
 
   const [verifyOperator, { isLoading: isVerifying }] =
@@ -108,10 +105,10 @@ const OperatorsTable = () => {
         !search ||
         o.name.toLowerCase().includes(search.toLowerCase()) ||
         o.phone.toLowerCase().includes(search.toLowerCase());
-      const matchesCity = !cityFilter || o.city === cityFilter;
-      return matchesSearch && matchesCity;
+
+      return matchesSearch;
     });
-  }, [operators, search, cityFilter]);
+  }, [operators, search]);
 
   const handleVerify = async (row: Operator) => {
     const toastId = toast.loading("Verifying operator...");
@@ -166,7 +163,7 @@ const OperatorsTable = () => {
       width: "180px",
       render: (row) => (
         <div className="flex items-center gap-2">
-          <Avatar>
+          {/* <Avatar>
             <AvatarImage
               src={row.image || AllImages.placeholder.src}
               alt={row.name}
@@ -174,7 +171,7 @@ const OperatorsTable = () => {
             <AvatarFallback>
               {row.name?.slice(0, 2).toUpperCase()}
             </AvatarFallback>
-          </Avatar>
+          </Avatar> */}
           <div>
             <p className="text-sm font-bold">{row.name}</p>
             <p className="text-xs">{row._id.slice(-6)}</p>
@@ -183,36 +180,36 @@ const OperatorsTable = () => {
       ),
     },
     { key: "phone", header: "Phone" },
-    { key: "invitationCode", header: "Code" },
+    { key: "code", header: "Code" },
     { key: "city", header: "City" },
     {
       key: "status",
       header: "Status",
       render: (row) => (
-        <StatusBadge status={statusBadgeMap[row.status] as any}>
+        <StatusBadge status={statusBadgeMap[row?.status] as any}>
           {row.status.replace(/_/g, " ")}
         </StatusBadge>
       ),
     },
-    {
-      key: "isVerified",
-      header: "KYC",
-      render: (row) => (
-        <StatusBadge status={row.isVerified ? "verified" : "pending"}>
-          {row.isVerified ? "verified" : "pending"}
-        </StatusBadge>
-      ),
-    },
-    { key: "totalCalls", header: "Calls" },
-    {
-      key: "totalEarnings",
-      header: "Earning",
-      render: (row) => <p>AED {row.totalEarnings}</p>,
-    },
+    // {
+    //   key: "isVerified",
+    //   header: "KYC",
+    //   render: (row) => (
+    //     <StatusBadge status={row.isVerified ? "verified" : "pending"}>
+    //       {row.isVerified ? "verified" : "pending"}
+    //     </StatusBadge>
+    //   ),
+    // },
+    // { key: "totalCalls", header: "Calls" },
+    // {
+    //   key: "totalEarnings",
+    //   header: "Earning",
+    //   render: (row) => <p>AED {row.totalEarnings}</p>,
+    // },
     {
       key: "createdAt",
-      header: "Joined",
-      render: (row) => <p>{formatDate(row.createdAt)}</p>,
+      header: "Expires At",
+      render: (row) => <p>{formatDate(row?.expiresAt)}</p>,
     },
     {
       key: "actions",
@@ -227,28 +224,28 @@ const OperatorsTable = () => {
           },
         ];
 
-        if (!row.isVerified || row.status === "pending_verification") {
-          items.push({
-            label: "Verify & Activate",
-            icon: BadgeCheck,
-            onClick: () => handleVerify(row),
-          });
-        }
+        // if (!row.isVerified || row.status === "pending_verification") {
+        //   items.push({
+        //     label: "Verify & Activate",
+        //     icon: BadgeCheck,
+        //     onClick: () => handleVerify(row),
+        //   });
+        // }
 
-        if (row.status === "active") {
-          items.push({
-            label: "Suspend Operator",
-            icon: TriangleAlert,
-            variant: "destructive",
-            onClick: () => setSuspendRow(row),
-          } as any);
-        } else if (row.status === "suspended") {
-          items.push({
-            label: "Reactivate Operator",
-            icon: RotateCcw,
-            onClick: () => handleActivate(row),
-          });
-        }
+        // if (row.status === "active") {
+        //   items.push({
+        //     label: "Suspend Operator",
+        //     icon: TriangleAlert,
+        //     variant: "destructive",
+        //     onClick: () => setSuspendRow(row),
+        //   } as any);
+        // } else if (row.status === "suspended") {
+        //   items.push({
+        //     label: "Reactivate Operator",
+        //     icon: RotateCcw,
+        //     onClick: () => handleActivate(row),
+        //   });
+        // }
 
         return (
           <div className="flex justify-end gap-1">
@@ -278,31 +275,16 @@ const OperatorsTable = () => {
               placeholder: "Status",
               value: statusFilter,
               options: [
-                { label: "Active", value: "active" },
-                { label: "Suspended", value: "suspended" },
+                { label: "Used", value: "used" },
                 { label: "Pending", value: "pending" },
               ],
             },
-            // {
-            //   key: "city",
-            //   placeholder: "City",
-            //   value: cityFilter,
-            //   options: [
-            //     { label: "Dubai", value: "Dubai" },
-            //     { label: "Sharjah", value: "Sharjah" },
-            //     { label: "Abu Dhabi", value: "Abu Dhabi" },
-            //     { label: "Ajman", value: "Ajman" },
-            //     { label: "Fujairah", value: "Fujairah" },
-            //     { label: "Ras Al Khaimah", value: "Ras Al Khaimah" },
-            //   ],
-            // },
           ]}
           onFilterChange={(key, value) => {
             if (key === "status") {
               setStatusFilter(value);
               setPage(1);
             }
-            if (key === "city") setCityFilter(value);
           }}
           pagination={{
             page,
@@ -490,4 +472,4 @@ const OperatorsTable = () => {
   );
 };
 
-export default OperatorsTable;
+export default InviteOperatorsTable;

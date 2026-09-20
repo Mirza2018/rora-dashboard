@@ -16,6 +16,7 @@ import {
   useEditDestinationMutation,
   useUpdateDestinationSatusMutation,
   useDeleteDestinationMutation,
+  useGetDestinationsQuery,
 } from "@/redux/api/adminApi"; // adjust to your actual path
 
 // ── API-shaped destination type ────────────────────────────────
@@ -31,17 +32,19 @@ type Destination = {
   updatedAt: string;
 };
 
-const PAGE_SIZE = 8;
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = React.useState(value);
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
 
-type PricingTableProps = {
-  destinations: Destination[];
-  loading: boolean;
-};
-
-const PricingTable = ({ destinations, loading }: PricingTableProps) => {
+const PricingTable = () => {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
-
+    const debouncedSearch = useDebouncedValue(search, 400);
   // Modal state
   const [editRow, setEditRow] = React.useState<Destination | null>(null);
   const [deleteRow, setDeleteRow] = React.useState<Destination | null>(null);
@@ -53,22 +56,26 @@ const PricingTable = ({ destinations, loading }: PricingTableProps) => {
   const [editOperatorPayout, setEditOperatorPayout] = React.useState("");
   const [editStatus, setEditStatus] = React.useState(true); // true = active
 
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+  } = useGetDestinationsQuery({
+    page,
+    limit: 10,
+    // ...(statusFilter ? { status: statusFilter } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+  });
+
+  const loading = isLoading || isFetching;
+  const destinations = response?.data ?? [];
+  const meta = response?.data?.meta;
+
   const [editDestination, { isLoading: isEditing }] =
     useEditDestinationMutation();
   const [updateStatus] = useUpdateDestinationSatusMutation();
   const [deleteDestination, { isLoading: isDeleting }] =
     useDeleteDestinationMutation();
-
-  const filtered = React.useMemo(() => {
-    if (!search) return destinations;
-    const q = search.toLowerCase();
-    return destinations.filter(
-      (d) =>
-        d.name.toLowerCase().includes(q) || d.prefix.toLowerCase().includes(q),
-    );
-  }, [destinations, search]);
-
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const openEdit = (row: Destination) => {
     setEditRow(row);
@@ -220,7 +227,7 @@ const PricingTable = ({ destinations, loading }: PricingTableProps) => {
         <DataTable
           title="Per-minute rates"
           columns={columns}
-          data={paged}
+          data={destinations}
           rowKey={(row) => row._id}
           loading={loading}
           searchable
@@ -234,8 +241,8 @@ const PricingTable = ({ destinations, loading }: PricingTableProps) => {
           onFilterChange={() => setPage(1)}
           pagination={{
             page,
-            pageSize: PAGE_SIZE,
-            totalItems: filtered.length,
+            pageSize: 10,
+            totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}
           emptyState={
