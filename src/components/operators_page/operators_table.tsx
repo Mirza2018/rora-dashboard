@@ -36,6 +36,12 @@ import AllImages from "@/assets/AllImages";
 // ── API-shaped operator type ───────────────────────────────────
 type OperatorStatus = "active" | "suspended" | "pending_verification";
 
+type OperatorPayout = {
+  _id: string;
+  createdAt: string;
+  amountMoney: number | string;
+};
+
 type Operator = {
   _id: string;
   name: string;
@@ -48,6 +54,7 @@ type Operator = {
   totalCalls: number;
   totalEarnings: number;
   availabilityStatus: "online" | "offline" | "busy";
+  payouts?: OperatorPayout[];
 };
 
 const formatDate = (iso: string) => {
@@ -58,6 +65,18 @@ const formatDate = (iso: string) => {
     month: "short",
     day: "2-digit",
   });
+};
+
+const formatPayoutMonth = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-US", { month: "long" });
+};
+
+const formatPayoutAmount = (amount: OperatorPayout["amountMoney"]) => {
+  const value = Number(amount);
+  if (!Number.isFinite(value)) return String(amount);
+  return value.toLocaleString("en-US");
 };
 
 // Map API status -> badge tokens your StatusBadge already understands.
@@ -431,16 +450,36 @@ const OperatorsTable = () => {
               </Card>
             </div>
 
-            {/* Monthly payout history isn't exposed by /operator/admin/:id yet —
-                surface a note instead of fabricating figures. Wire this up
-                to a real payout-history endpoint once one exists. */}
-            <div className="border rounded-md p-4 text-center text-sm text-muted-foreground">
-              Monthly payout history isn't available from this endpoint yet.
-              {viewRow?.payouts?.map((payout) => (
-                <p key={payout._id}>
-                  {formatDate(payout.createdAt)}: AED {payout.amountMoney}
-                </p>
-              ))}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-white">
+                Monthly Payout History
+              </h4>
+              <div className="max-h-80 overflow-y-auto rounded-xl border border-card-border px-4 py-2 custom-scroll">
+                {viewRow.payouts?.length ? (
+                  viewRow.payouts.map((payout) => (
+                    <div
+                      key={payout._id}
+                      className="flex min-h-[60px] items-center justify-between gap-4 py-2"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card-border text-muted-foreground">
+                          <Banknote size={20} />
+                        </span>
+                        <p className="text-base font-medium text-foreground">
+                          {formatPayoutMonth(payout.createdAt)}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-sm font-bold text-status-complete">
+                        AED {formatPayoutAmount(payout.amountMoney)}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="py-8 text-center text-sm text-muted-foreground">
+                    No payout history available.
+                  </p>
+                )}
+              </div>
             </div>
           </>
         )}
