@@ -50,8 +50,6 @@ type Operator = {
   availabilityStatus: "online" | "offline" | "busy";
 };
 
-
-
 const formatDate = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -411,7 +409,7 @@ const OperatorsTable = () => {
                     <div className="flex flex-col justify-center items-center -my-3">
                       <PhoneCall className="text-primary" size={36} />
                       <p className="text-2xl font-bold text-white">
-                        {viewRow.totalCalls}
+                        {viewRow?.totalCalls}
                       </p>
                       <p className="text-xs">Calls</p>
                     </div>
@@ -424,7 +422,7 @@ const OperatorsTable = () => {
                     <div className="flex flex-col justify-center items-center -my-3">
                       <DollarSign className="text-status-complete" size={36} />
                       <p className="text-2xl font-bold text-white">
-                        AED {viewRow.totalEarnings}
+                        AED {viewRow?.totalEarnings}
                       </p>
                       <p className="text-xs">Revenue</p>
                     </div>
@@ -438,6 +436,11 @@ const OperatorsTable = () => {
                 to a real payout-history endpoint once one exists. */}
             <div className="border rounded-md p-4 text-center text-sm text-muted-foreground">
               Monthly payout history isn't available from this endpoint yet.
+              {viewRow?.payouts?.map((payout) => (
+                <p key={payout._id}>
+                  {formatDate(payout.createdAt)}: AED {payout.amountMoney}
+                </p>
+              ))}
             </div>
           </>
         )}

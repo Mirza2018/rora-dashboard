@@ -95,12 +95,12 @@ const OperatorsPage = () => {
           </p>
         </div>
 
-        <div className="flex justify-end gap-3  w-full">
+        {/* <div className="flex justify-end gap-3  w-full">
           <Button onClick={() => setIsInviteOpen(true)}>
             <Plus className="size-4" />
             Invite Operator
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Stat cards */}

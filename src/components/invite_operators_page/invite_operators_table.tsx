@@ -386,7 +386,7 @@ const InviteOperatorsTable = () => {
                 <p className="text-sm font-medium">{viewRow.city}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
                   <CardDescription>
@@ -413,14 +413,14 @@ const InviteOperatorsTable = () => {
                   </CardDescription>
                 </CardHeader>
               </Card>
-            </div>
+            </div> */}
 
             {/* Monthly payout history isn't exposed by /operator/admin/:id yet —
                 surface a note instead of fabricating figures. Wire this up
                 to a real payout-history endpoint once one exists. */}
-            <div className="border rounded-md p-4 text-center text-sm text-muted-foreground">
+            {/* <div className="border rounded-md p-4 text-center text-sm text-muted-foreground">
               Monthly payout history isn't available from this endpoint yet.
-            </div>
+            </div> */}
           </>
         )}
       </Modal>

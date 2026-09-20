@@ -27,7 +27,7 @@ const OperatorsPage = () => {
   const [isInviteOpen, setIsInviteOpen] = React.useState(false);
   const [city, setCity] = React.useState<string | null>(null);
   const [fullName, setFullName] = React.useState("");
-  const [countryCode, setCountryCode] = React.useState("+971");
+  const [countryCode, setCountryCode] = React.useState("");
   const [phone, setPhone] = React.useState("");
 
 
