@@ -1,15 +1,15 @@
 "use client";
-import { Bell, LogOut, Search, User } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Select } from "../ui/select";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-import { NotificationBell } from "./notification-bell";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { clearAuth } from "@/redux/slices/authSlice";
+import { RootState } from "@/redux/store";
+import { LogOut, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import Cookies from "universal-cookie";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Select } from "../ui/select";
+import { NotificationBell } from "./notification-bell";
 
 export function Topbar() {
   const router = useRouter();

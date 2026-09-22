@@ -107,11 +107,11 @@ export function NotificationBell() {
         className="relative text-sidebar-foreground hover:text-title transition-colors"
       >
         <Bell className="size-5" />
-        {unreadCount > 0 && (
+        {/* {unreadCount > 0 && (
           <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-status-failed px-1 text-[10px] font-semibold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
-        )}
+        )} */}
       </button>
 
       {open && (
