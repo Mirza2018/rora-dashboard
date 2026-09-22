@@ -68,7 +68,7 @@ const PricingTable = () => {
   });
 
   const loading = isLoading || isFetching;
-  const destinations = response?.data ?? [];
+  const destinations = response?.data?.destinations ?? [];
   const meta = response?.data?.meta;
 
   const [editDestination, { isLoading: isEditing }] =

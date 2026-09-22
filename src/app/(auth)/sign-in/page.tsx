@@ -53,6 +53,12 @@ export default function SignInPage() {
     // return;
     try {
       const res = await userLogin(loginData).unwrap();
+      if (res?.data?.role !== "SUPER_ADMIN") {
+        return toast.warning("Please use admin Email to login Dashboard", {
+          id: toastId,
+          duration: 2000,
+        });
+      }
 
       dispatch(clearAuth());
       dispatch(setAccessToken(res?.data?.accessToken));
@@ -65,13 +71,6 @@ export default function SignInPage() {
         id: toastId,
         duration: 2000,
       });
-
-      if (res?.data?.role !== "SUPER_ADMIN") {
-        return toast.warning("Please use admin Email to login Dashboard", {
-          id: toastId,
-          duration: 2000,
-        });
-      }
 
       // router.push("/dashboard/overview");
       // router.refresh();
