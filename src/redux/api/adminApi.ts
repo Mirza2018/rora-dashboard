@@ -131,6 +131,18 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: [tagTypes.calls],
     }),
 
+    cancelCall: build.mutation<Response, any>({
+      query: (id) => {
+        console.log(id);
+
+        return {
+          url: `/calls/admin/${id}/cancel`,
+          method: "PATCH",
+        };
+      },
+      invalidatesTags: [tagTypes.calls],
+    }),
+
     ////Customers
 
     getCustomers: build.query<Response, any>({
@@ -370,6 +382,7 @@ export const {
   useLazyGetCallsQuery,
   useGetCallsQuery,
   useGetCallStatQuery,
+  useCancelCallMutation,
 
   //Customers
 

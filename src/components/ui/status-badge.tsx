@@ -25,12 +25,13 @@ const statusBadgeVariants = cva(
           "bg-status-complete/10 text-status-complete border-status-complete/30",
         approved:
           "bg-status-complete/10 text-status-complete border-status-complete/30",
-        used:
-          "bg-status-complete/10 text-status-complete border-status-complete/30",
+        used: "bg-status-complete/10 text-status-complete border-status-complete/30",
         verified:
           "bg-status-complete/10 text-status-complete border-status-complete/30",
 
         failed:
+          "bg-status-failed/10 text-status-failed border-status-failed/30",
+        cancelled:
           "bg-status-failed/10 text-status-failed border-status-failed/30",
 
         pending:
@@ -73,6 +74,7 @@ const statusIcons = {
   used: CircleCheckBig,
   verified: BadgeCheck,
   failed: CircleX,
+  cancelled: CircleX,
   pending: Clock3,
   active: Play,
   suspended: PauseCircle,

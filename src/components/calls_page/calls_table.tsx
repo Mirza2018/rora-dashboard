@@ -1,13 +1,16 @@
 "use client";
 
-import { SearchX } from "lucide-react";
+import { Eye, SearchX, X } from "lucide-react";
 import * as React from "react";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { useGetCallsQuery } from "@/redux/api/adminApi"; // adjust to your actual path
+import { useCancelCallMutation, useGetCallsQuery } from "@/redux/api/adminApi"; // adjust to your actual path
+import { toast } from "sonner";
+import { Button } from "../ui/button";
+import { DropdownMenu } from "../ui/dropdown-menu";
 
 // ── API-shaped call type ─────────────────────────────────────
 type CallStatus =
@@ -15,7 +18,6 @@ type CallStatus =
   | "assigned"
   | "dialing_customer"
   | "customer_connected"
-  | "dialing_destination"
   | "destination_connected"
   | "conferencing"
   | "completed"
@@ -38,9 +40,6 @@ type Call = {
   minutesUsed?: number;
   failureReason?: string;
 };
-
-
-
 
 const STATUS_OPTIONS: { label: string; value: CallStatus }[] = [
   { label: "Requested", value: "requested" },
@@ -74,7 +73,7 @@ const statusBadgeMap: Record<CallStatus, string> = {
   conferencing: "pending",
   completed: "complete",
   failed: "failed",
-  cancelled: "pending",
+  cancelled: "cancelled",
 };
 
 const formatDate = (iso: string) => {
@@ -131,7 +130,10 @@ const CallsTable = () => {
   const [page, setPage] = React.useState(1);
 
   const [viewRow, setViewRow] = React.useState<Call | null>(null);
-
+  const [cancelCall, setCancelCall] = React.useState<Call | null>(null);
+  const [cancelCallLoading, setCancelCallLoading] =
+    React.useState<boolean>(false);
+  const [cancelTheCall] = useCancelCallMutation();
   const debouncedSearch = useDebouncedValue(search, 400);
 
   const {
@@ -198,18 +200,88 @@ const CallsTable = () => {
     },
     {
       key: "actions",
-      header: "",
+      header: "Actions",
       align: "right",
-      render: (row) => (
-        <button
-          onClick={() => setViewRow(row)}
-          className="text-xs font-medium text-primary hover:underline"
-        >
-          View
-        </button>
-      ),
+      render: (row) => {
+        const items = [
+          {
+            label: "View details",
+            icon: Eye,
+            onClick: () => setViewRow(row),
+          },
+        ];
+
+        if (
+          row?.status == "requested" ||
+          row?.status == "dialing_customer" ||
+          row?.status == "assigned" ||
+          row?.status == "customer_connected" ||
+          row?.status == "destination_connected" ||
+          row?.status == "conferencing"
+        ) {
+          items.push({
+            label: "Call cancel",
+            icon: X,
+            variant: "destructive",
+            onClick: () => setCancelCall(row),
+          });
+        }
+
+        return (
+          <div className="flex justify-end gap-1">
+            <DropdownMenu items={items as any} />
+          </div>
+        );
+      },
     },
   ];
+
+  // <>
+  //   <button
+  //     onClick={() => setViewRow(row)}
+  //     className="text-xs font-medium text-primary hover:underline"
+  //   >
+  //     View
+  //   </button>
+  //   <button
+  //     onClick={() => setCancelCall(row)}
+  //     className="text-xs font-medium text-destructive hover:underline"
+  //   >
+  //     Cancel
+  //   </button>
+  // </>;
+
+  const handleCancelCall = async () => {
+    if (!cancelCall) return;
+    setCancelCallLoading(true);
+    const toastId = toast.loading("Call cancel request processing...");
+    try {
+      const res = await cancelTheCall(cancelCall?._id);
+      toast.success(
+        res?.message ||
+          res?.error?.message ||
+          res?.error?.data?.message ||
+          "Successfully call is canceled",
+        {
+          id: toastId,
+          duration: 2000,
+        },
+      );
+    } catch (error) {
+      toast.error(
+        error?.message ||
+          error?.error?.message ||
+          "There is an error to cancel the call, Please try latter",
+        {
+          id: toastId,
+          duration: 2000,
+        },
+      );
+    } finally {
+      setCancelCallLoading(false);
+      setCancelCall(null);
+    }
+  };
 
   return (
     <>
@@ -340,6 +412,37 @@ const CallsTable = () => {
             )}
           </dl>
         )}
+      </Modal>
+
+      <Modal
+        open={!!cancelCall}
+        onClose={() => {
+          setCancelCall(null);
+        }}
+        // title="Suspend Operator"
+        title={`Cancel Call ${cancelCall?.callRef}`}
+        description={`Are you sure you want to cancel the call?`}
+      >
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="cancel"
+            onClick={() => {
+              setCancelCall(null);
+            }}
+            className="cursor-pointer"
+            // disabled={isSuspending}
+          >
+            Close
+          </Button>
+          <Button
+            variant="destructive"
+            className="cursor-pointer"
+            onClick={handleCancelCall}
+            disabled={cancelCallLoading}
+          >
+            {cancelCallLoading ? "Request is processing" : " Cancel call"}
+          </Button>
+        </div>
       </Modal>
     </>
   );
