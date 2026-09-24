@@ -19,6 +19,7 @@ type CallStatus =
   | "dialing_customer"
   | "customer_connected"
   | "destination_connected"
+  | "dialing_destination"
   | "conferencing"
   | "completed"
   | "failed"
@@ -224,7 +225,7 @@ const CallsTable = () => {
             icon: X,
             variant: "destructive",
             onClick: () => setCancelCall(row),
-          });
+          } as any);
         }
 
         return (
@@ -253,25 +254,23 @@ const CallsTable = () => {
 
   const handleCancelCall = async () => {
     if (!cancelCall) return;
+
     setCancelCallLoading(true);
+
     const toastId = toast.loading("Call cancel request processing...");
+
     try {
-      const res = await cancelTheCall(cancelCall?._id);
-      toast.success(
-        res?.message ||
-          res?.error?.message ||
-          res?.error?.data?.message ||
-          "Successfully call is canceled",
-        {
-          id: toastId,
-          duration: 2000,
-        },
-      );
-    } catch (error) {
+      const res = await cancelTheCall(cancelCall._id).unwrap();
+
+      toast.success("Successfully call is canceled", {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error: any) {
       toast.error(
-        error?.message ||
-          error?.error?.message ||
-          "There is an error to cancel the call, Please try latter",
+        error?.data?.message ||
+          error?.message ||
+          "There is an error to cancel the call, Please try later",
         {
           id: toastId,
           duration: 2000,
