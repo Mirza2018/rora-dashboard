@@ -1,24 +1,23 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
-import { Phone } from "lucide-react";
-import Link from "next/link";
-import { FormField } from "@/components/ui/form-field";
-import { Button } from "@/components/ui/button";
 import { AuthLayout } from "@/components/layout/auth-layout";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { useUserLoginMutation } from "@/redux/api/authApi";
-import { useDispatch } from "react-redux";
-import Cookies from "universal-cookie";
 import {
   clearAuth,
   setAccessToken,
   setUserInfo,
 } from "@/redux/slices/authSlice";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Phone } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
+import { toast } from "sonner";
+import Cookies from "universal-cookie";
+import { z } from "zod";
 
 const schema = z.object({
   phone: z.string().min(5, "Phone number is required"),

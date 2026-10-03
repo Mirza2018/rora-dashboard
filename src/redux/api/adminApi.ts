@@ -326,9 +326,10 @@ export const adminApi = baseApi.injectEndpoints({
       // providesTags: [tagTypes.customers],
     }),
     getOverview: build.query<Response, any>({
-      query: () => ({
+      query: (params) => ({
         url: `/admin/dashboard`,
         method: "GET",
+        params,
       }),
       // providesTags: [tagTypes.customers],
     }),
