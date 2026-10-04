@@ -124,9 +124,26 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: [tagTypes.calls],
     }),
     getCallStat: build.query<Response, any>({
-      query: () => ({
+      query: (params) => ({
         url: `/calls/admin/stats`,
         method: "GET",
+        params,
+      }),
+      providesTags: [tagTypes.calls],
+    }),
+    getFailurReasons: build.query<Response, any>({
+      query: (params) => ({
+        url: `/calls/admin/failure-reasons`,
+        method: "GET",
+        params,
+      }),
+      providesTags: [tagTypes.calls],
+    }),
+    getTrendCalls: build.query<Response, any>({
+      query: (params) => ({
+        url: `/calls/admin/trend`,
+        method: "GET",
+        params,
       }),
       providesTags: [tagTypes.calls],
     }),
@@ -384,6 +401,10 @@ export const {
   useGetCallsQuery,
   useGetCallStatQuery,
   useCancelCallMutation,
+  useGetTrendCallsQuery,
+  useGetFailurReasonsQuery,
+  
+
 
   //Customers
 
