@@ -369,11 +369,15 @@ export const adminApi = baseApi.injectEndpoints({
     }),
     /////////Manually User create
     customerCreate: build.mutation<Response, any>({
-      query: (body) => ({
-        url: `/users/admin/create`,
-        method: "POST",
-        body: body,
-      }),
+      query: (body) => {
+        console.log(body);
+        
+        return {
+          url: `/users/admin/create`,
+          method: "POST",
+          body: body,
+        };
+      },
       invalidatesTags: [tagTypes.customers],
     }),
     operatorCreate: build.mutation<Response, any>({

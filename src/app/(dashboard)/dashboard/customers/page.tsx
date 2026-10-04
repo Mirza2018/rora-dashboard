@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  useCustomerCreateMutation,
   useGetCustomerstatQuery,
   useLazyGetCustomersQuery,
-  useOperatorCreateMutation,
 } from "@/redux/api/adminApi"; // adjust to your actual path
 import { useState } from "react";
 import { Modal } from "@/components/ui/modal";
@@ -30,7 +30,8 @@ const CustomersPage = () => {
   const [triggerGetCustomers, { isFetching: isExporting }] =
     useLazyGetCustomersQuery();
     
-  const [createOperator, { isLoading: isCreating }] = useOperatorCreateMutation();
+  const [createOperator, { isLoading: isCreating }] =
+    useCustomerCreateMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
