@@ -367,6 +367,23 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.policy],
     }),
+    /////////Manually User create
+    customerCreate: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/users/admin/create`,
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: [tagTypes.customers],
+    }),
+    operatorCreate: build.mutation<Response, any>({
+      query: (body) => ({
+        url: `/operator/admin/create`,
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: [tagTypes.operators],
+    }),
 
     // end
   }),
@@ -403,8 +420,6 @@ export const {
   useCancelCallMutation,
   useGetTrendCallsQuery,
   useGetFailurReasonsQuery,
-  
-
 
   //Customers
 
@@ -442,4 +457,7 @@ export const {
   //
   useGetPolicyAndHelpQuery,
   useUpdatePolicyAndHelpMutation,
+  //
+  useCustomerCreateMutation,
+  useOperatorCreateMutation,
 } = adminApi;
