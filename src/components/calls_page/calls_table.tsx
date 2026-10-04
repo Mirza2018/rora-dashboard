@@ -18,8 +18,8 @@ type CallStatus =
   | "assigned"
   | "dialing_customer"
   | "customer_connected"
-  | "destination_connected"
-  | "dialing_destination"
+  | "requested"
+  | "dropped"
   | "conferencing"
   | "completed"
   | "failed"
@@ -42,23 +42,25 @@ type Call = {
   failureReason?: string;
 };
 
-const STATUS_OPTIONS: { label: string; value: CallStatus }[] = [
-  { label: "Requested", value: "requested" },
-  { label: "Assigned", value: "assigned" },
-  { label: "Dialing customer", value: "dialing_customer" },
-  { label: "Customer connected", value: "customer_connected" },
-  { label: "Dialing destination", value: "dialing_destination" },
-  { label: "Destination connected", value: "destination_connected" },
-  { label: "Conferencing", value: "conferencing" },
+const STATUS_OPTIONS: {
+  label: string;
+  value: CallStatus | "dropped" | "all";
+}[] = [
+  // { label: "All", value: "all" },
   { label: "Completed", value: "completed" },
   { label: "Failed", value: "failed" },
   { label: "Cancelled", value: "cancelled" },
+  { label: "Dropped", value: "dropped" },
+  { label: "Requested", value: "requested" },
 ];
 
 const DAYS_OPTIONS = [
-  { label: "Last 7 days", value: "7" },
-  { label: "Last 15 days", value: "15" },
-  { label: "Last 30 days", value: "30" },
+  { label: "Today", value: "today" },
+  { label: "Yesterday", value: "yesterday" },
+  { label: "Last 7 days", value: "last7days" },
+  { label: "Last 30 days", value: "last30days" },
+  { label: "This month", value: "thismonth" },
+  { label: "Custom Date Range", value: "custom" },
 ];
 
 // In-flight/live statuses map to a "pending"-style badge; completed/failed/
@@ -126,8 +128,12 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 
 const CallsTable = () => {
   const [search, setSearch] = React.useState("");
-  const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
-  const [daysFilter, setDaysFilter] = React.useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = React.useState<string | null>("all");
+  const [daysFilter, setDaysFilter] = React.useState<string | null>(
+    "last30days",
+  );
+  const [customFrom, setCustomFrom] = React.useState("");
+  const [customTo, setCustomTo] = React.useState("");
   const [page, setPage] = React.useState(1);
 
   const [viewRow, setViewRow] = React.useState<Call | null>(null);
@@ -137,15 +143,24 @@ const CallsTable = () => {
   const [cancelTheCall] = useCancelCallMutation();
   const debouncedSearch = useDebouncedValue(search, 400);
 
+  const formatDateForApi = (dateStr: string) => {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-");
+    return `${d}-${m}-${y}`;
+  };
+
   const {
     data: response,
     isLoading,
     isFetching,
   } = useGetCallsQuery({
     page,
-    limit: 10,
-    ...(statusFilter ? { status: statusFilter } : {}),
-    ...(daysFilter ? { days: daysFilter } : {}),
+    limit: 8,
+    ...(statusFilter && statusFilter !== "all" ? { status: statusFilter } : {}),
+    range: daysFilter || "last30days",
+    ...(daysFilter === "custom" && customFrom && customTo
+      ? { from: formatDateForApi(customFrom), to: formatDateForApi(customTo) }
+      : {}),
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
 
@@ -212,14 +227,7 @@ const CallsTable = () => {
           },
         ];
 
-        if (
-          row?.status == "requested" ||
-          row?.status == "dialing_customer" ||
-          row?.status == "assigned" ||
-          row?.status == "customer_connected" ||
-          row?.status == "destination_connected" ||
-          row?.status == "conferencing"
-        ) {
+        if (row?.status == "dropped" || row?.status == "requested") {
           items.push({
             label: "Call cancel",
             icon: X,
@@ -284,7 +292,24 @@ const CallsTable = () => {
 
   return (
     <>
-      <main className="flex-1 ">
+      <main className="flex-1 space-y-4">
+        {daysFilter === "custom" && (
+          <div className="flex items-center gap-2 justify-end px-1">
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="flex h-9 w-[140px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <span className="text-muted-foreground">-</span>
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="flex h-9 w-[140px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+        )}
         <DataTable
           title="Calls"
           columns={columns}
@@ -319,7 +344,7 @@ const CallsTable = () => {
           }}
           pagination={{
             page,
-            pageSize: 10,
+            pageSize: 8,
             totalItems: meta?.total ?? 0,
           }}
           onPageChange={setPage}
