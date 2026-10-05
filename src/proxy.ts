@@ -49,7 +49,7 @@ export function proxy(request: NextRequest) {
   // Get token
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
 
-  console.log("Access Token:", accessToken ? "FOUND" : "NOT FOUND");
+
 
   // No token → sign in
   if (!accessToken) {
