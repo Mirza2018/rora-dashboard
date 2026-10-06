@@ -269,6 +269,13 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.destinations],
     }),
+    pinDestination: build.mutation<Response, any>({
+      query: (id) => ({
+        url: `/destinations/admin/${id}/pin`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [tagTypes.destinations],
+    }),
     //Operators
 
     getOperators: build.query<Response, any>({
@@ -487,4 +494,6 @@ export const {
   //
   useGetCountriesQuery,
   useLazyGetCountriesQuery,
+  //
+  usePinDestinationMutation,
 } = adminApi;
