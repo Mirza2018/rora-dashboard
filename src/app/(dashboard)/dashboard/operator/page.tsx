@@ -389,7 +389,7 @@ const OperatorsPage = () => {
               options={CITY_OPTIONS}
             />
           </div>
-
+{/* 
           <div className="space-y-1.5">
             <Label htmlFor="addPhoneNumbers" className="text-white">
               Additional Phone Numbers (comma separated)
@@ -400,7 +400,7 @@ const OperatorsPage = () => {
               value={addPhoneNumbers}
               onChange={(e) => setAddPhoneNumbers(e.target.value)}
             />
-          </div>
+          </div> */}
         </div>
       </Modal>
     </main>

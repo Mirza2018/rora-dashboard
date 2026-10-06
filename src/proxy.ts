@@ -59,7 +59,7 @@ export function proxy(request: NextRequest) {
   try {
     const decoded = jwtDecode<JwtPayload>(accessToken);
 
-    console.log("Decoded token:", decoded);
+    // console.log("Decoded token:", decoded);
 
     // Token expired
     if (decoded.exp && decoded.exp * 1000 < Date.now()) {

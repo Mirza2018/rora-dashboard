@@ -224,7 +224,7 @@ const OperatorsTable = () => {
     {
       key: "totalEarnings",
       header: "Earning",
-      render: (row) => <p>AED {row.totalEarnings}</p>,
+      render: (row) => <p>AED {row.totalEarnings.toFixed(2)}</p>,
     },
     {
       key: "createdAt",
@@ -441,7 +441,7 @@ const OperatorsTable = () => {
                     <div className="flex flex-col justify-center items-center -my-3">
                       <DollarSign className="text-status-complete" size={36} />
                       <p className="text-2xl font-bold text-white">
-                        AED {viewRow?.totalEarnings}
+                        AED {viewRow?.totalEarnings.toFixed(2)}
                       </p>
                       <p className="text-xs">Revenue</p>
                     </div>
