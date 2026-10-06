@@ -75,6 +75,10 @@ export const OperatorDetailsModal = ({
   const payoutHistory = data?.payoutHistory || [];
   const comp = rangeScoped?.comparison || {};
 
+  // If the loaded operator doesn't match the requested operatorId, we should show the main loading skeleton
+  const isDataForCurrentOperator = operator && (operator.id === operatorId || operator._id === operatorId);
+  const showMainSkeleton = isFetching && !isDataForCurrentOperator;
+
   const renderChange = (percent: number | null | undefined, suffix = "%", isPoints = false) => {
     if (percent === null || percent === undefined) return null;
     const isPositive = percent > 0;
@@ -101,13 +105,13 @@ export const OperatorDetailsModal = ({
         </Button>
       }
     >
-      {!data && isFetching ? (
+      {showMainSkeleton || (!data && isFetching) ? (
         <div className="space-y-4 py-8">
            <Skeleton className="h-24 w-full" />
            <Skeleton className="h-40 w-full" />
            <Skeleton className="h-40 w-full" />
         </div>
-      ) : operator ? (
+      ) : isDataForCurrentOperator ? (
         <div className="space-y-6">
           {/* Header Profile Card */}
           <Card>
