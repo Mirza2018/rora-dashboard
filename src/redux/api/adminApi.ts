@@ -8,6 +8,9 @@ interface Filter {
 }
 interface Response {
   data: any | void;
+  success?: boolean;
+  statusCode?: number;
+  message?: string;
 }
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (build) => ({

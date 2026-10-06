@@ -829,11 +829,7 @@ export default function CallPage() {
         <h2 className="text-title text-xl font-bold mb-4">
           Full Call History Ledger
         </h2>
-        <CallsTable
-          dateRange={range}
-          customFrom={fromDate ? formatDateForApi(fromDate) : ""}
-          customTo={toDate ? formatDateForApi(toDate) : ""}
-        />
+        <CallsTable />
       </div>
     </main>
   );

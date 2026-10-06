@@ -201,7 +201,15 @@ const OperatorsTable = () => {
       ),
     },
     { key: "phone", header: "Phone" },
-    { key: "invitationCode", header: "Code" },
+    {
+      key: "invitationCode",
+      header: "Code",
+      render: (row) => (
+        <p>
+          {row.invitationCode ? row?.invitationCode : <p className="text-green-500">Manually Created</p>}
+        </p>
+      ),
+    },
     { key: "city", header: "City" },
     {
       key: "status",
@@ -348,9 +356,9 @@ const OperatorsTable = () => {
       </main>
 
       {/* View details modal */}
-      <OperatorDetailsModal 
+      <OperatorDetailsModal
         operatorId={viewRow?._id || null}
-        onClose={() => setViewRow(null)} 
+        onClose={() => setViewRow(null)}
       />
 
       {/* Suspend confirmation modal */}

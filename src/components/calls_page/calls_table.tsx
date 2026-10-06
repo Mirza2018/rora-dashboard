@@ -18,7 +18,8 @@ type CallStatus =
   | "assigned"
   | "dialing_customer"
   | "customer_connected"
-  | "requested"
+  | "dialing_destination"
+  | "destination_connected"
   | "dropped"
   | "conferencing"
   | "completed"
@@ -77,6 +78,7 @@ const statusBadgeMap: Record<CallStatus, string> = {
   completed: "complete",
   failed: "failed",
   cancelled: "cancelled",
+  dropped: "failed",
 };
 
 const formatDate = (iso: string) => {
