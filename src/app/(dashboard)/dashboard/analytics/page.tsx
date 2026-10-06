@@ -197,7 +197,8 @@ const CallPage = () => {
         <div>
           <h1 className="text-title text-3xl font-bold">Analytics</h1>
           <p className="text-muted-foreground ">
-            Detailed analytics across revenue, calls, operators, customers and distributors
+            Detailed analytics across revenue, calls, operators, customers and
+            distributors
           </p>
         </div>
 
@@ -304,7 +305,11 @@ const CallPage = () => {
                 <CardTitle className="text-2xl">
                   {connectedCallRatePercent}%
                 </CardTitle>
-                {renderChange(comparison.connectedCallRateChangePoints, "", true)}
+                {renderChange(
+                  comparison.connectedCallRateChangePoints,
+                  "",
+                  true,
+                )}
               </div>
             )}
           </CardHeader>
@@ -322,7 +327,12 @@ const CallPage = () => {
               <Skeleton className="h-80 w-full" />
             ) : (
               <>
-                <AreaRechart data={revenueTrend} xKey="date" yKey="revenue" color="var(--chart-bar-1)" />
+                <AreaRechart
+                  data={revenueTrend}
+                  xKey="date"
+                  yKey="revenue"
+                  color="var(--chart-bar-1)"
+                />
                 <div className="text-primary flex gap-2 justify-center items-center mt-2">
                   <GitCommitHorizontal />
                   Revenue ($)
@@ -356,7 +366,12 @@ const CallPage = () => {
               <Skeleton className="h-80 w-full" />
             ) : (
               <>
-                <AreaRechart data={callRequestsTrend} xKey="date" yKey="count" color="#2F80ED" />
+                <AreaRechart
+                  data={callRequestsTrend}
+                  xKey="date"
+                  yKey="count"
+                  color="#2F80ED"
+                />
                 <div className="text-[#2F80ED] flex gap-2 justify-center items-center mt-2">
                   <GitCommitHorizontal />
                   Requests Count
@@ -374,7 +389,12 @@ const CallPage = () => {
               <Skeleton className="h-80 w-full" />
             ) : (
               <>
-                <AreaRechart data={connectedMinutesTrend} xKey="date" yKey="minutes" color="#27C281" />
+                <AreaRechart
+                  data={connectedMinutesTrend}
+                  xKey="date"
+                  yKey="minutes"
+                  color="#27C281"
+                />
                 <div className="text-[#27C281] flex gap-2 justify-center items-center mt-2">
                   <GitCommitHorizontal />
                   Minutes
@@ -395,7 +415,10 @@ const CallPage = () => {
             <div className="space-y-4">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="border p-2.5 rounded-2xl flex justify-between items-center">
+                  <div
+                    key={i}
+                    className="border p-2.5 rounded-2xl flex justify-between items-center"
+                  >
                     <div className="flex items-center gap-2.5">
                       <Skeleton className="size-9 rounded-full" />
                       <div className="space-y-1.5">
@@ -410,7 +433,10 @@ const CallPage = () => {
                 <p className="text-sm text-muted-foreground">No data yet</p>
               ) : (
                 topOperators.map((operator: any, index: number) => (
-                  <div key={operator.id || operator._id} className="border p-2.5 rounded-2xl flex justify-between items-center">
+                  <div
+                    key={operator.id || operator._id}
+                    className="border p-2.5 rounded-2xl flex justify-between items-center"
+                  >
                     <div className="flex items-center gap-2.5">
                       <div className="font-bold text-sm px-4 py-2.5 rounded-full bg-[#192331]">
                         {index + 1}
@@ -419,7 +445,9 @@ const CallPage = () => {
                         <h1 className="font-bold text-sm text-white truncate pr-2">
                           {operator.name}
                         </h1>
-                        <p className="text-xs text-muted-foreground">{operator.calls} calls</p>
+                        <p className="text-xs text-muted-foreground">
+                          {operator.calls} calls
+                        </p>
                       </div>
                     </div>
                     <div className="font-bold text-sm text-white shrink-0">
@@ -440,7 +468,10 @@ const CallPage = () => {
             <div className="space-y-4">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="border p-2.5 rounded-2xl flex justify-between items-center">
+                  <div
+                    key={i}
+                    className="border p-2.5 rounded-2xl flex justify-between items-center"
+                  >
                     <div className="flex items-center gap-2.5">
                       <Skeleton className="size-9 rounded-full" />
                       <Skeleton className="h-3.5 w-24" />
@@ -452,7 +483,10 @@ const CallPage = () => {
                 <p className="text-sm text-muted-foreground">No data yet</p>
               ) : (
                 topCustomers.map((customer: any, index: number) => (
-                  <div key={customer._id || customer.id} className="border p-2.5 rounded-2xl flex justify-between items-center">
+                  <div
+                    key={customer._id || customer.id}
+                    className="border p-2.5 rounded-2xl flex justify-between items-center"
+                  >
                     <div className="flex items-center gap-2.5">
                       <div className="font-bold text-sm px-4 py-2.5 rounded-full bg-[#182926]">
                         {index + 1}
@@ -481,7 +515,10 @@ const CallPage = () => {
             <div className="space-y-4">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="border p-2.5 rounded-2xl flex justify-between items-center">
+                  <div
+                    key={i}
+                    className="border p-2.5 rounded-2xl flex justify-between items-center"
+                  >
                     <div className="flex items-center gap-2.5">
                       <Skeleton className="size-9 rounded-full" />
                       <div className="space-y-1.5">
@@ -496,7 +533,10 @@ const CallPage = () => {
                 <p className="text-sm text-muted-foreground">No data yet</p>
               ) : (
                 topDistributors.map((distributor: any, index: number) => (
-                  <div key={distributor.id || distributor._id} className="border p-2.5 rounded-2xl flex justify-between items-center">
+                  <div
+                    key={distributor.id || distributor._id}
+                    className="border p-2.5 rounded-2xl flex justify-between items-center"
+                  >
                     <div className="flex items-center gap-2.5">
                       <div className="font-bold text-sm px-4 py-2.5 rounded-full bg-[#2a1b38]">
                         {index + 1}
@@ -505,7 +545,9 @@ const CallPage = () => {
                         <h1 className="font-bold text-sm text-white truncate pr-2">
                           {distributor.name}
                         </h1>
-                        <p className="text-xs text-muted-foreground">{distributor.totalMinutes} mins</p>
+                        <p className="text-xs text-muted-foreground">
+                          {distributor.totalMinutes} mins
+                        </p>
                       </div>
                     </div>
                     <div className="font-bold text-sm text-white shrink-0">

@@ -515,7 +515,12 @@ export default function DashboardPage() {
               <Skeleton className="h-[320px] w-full" />
             ) : (
               <>
-                <AreaRechart data={data?.revenueLast7Days ?? []} />
+                <AreaRechart
+                  data={data?.revenueLast7Days ?? []}
+                  xKey="date"
+                  yKey="revenue"
+                  color="#2F80ED"
+                />
                 <div className="text-primary mt-4 flex gap-4 justify-center items-center text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-blue-500" />
