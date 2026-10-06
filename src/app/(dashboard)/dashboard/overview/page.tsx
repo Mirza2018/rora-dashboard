@@ -1,20 +1,15 @@
 "use client"
-import { useState } from "react";
 import {
-  ArrowUpRight,
-  GitCommitHorizontal,
-  Users,
   CheckCircle,
   Clock,
   DollarSign,
-  PhoneForwarded,
   Headset,
+  PhoneForwarded,
   Share2,
   UserPlus,
-  AlertTriangle,
-  Zap,
-  Activity,
+  Users
 } from "lucide-react";
+import { useState } from "react";
 
 import { AreaRechart } from "@/components/charts/area-chart";
 import { PieChart } from "@/components/charts/pie_chart";
@@ -26,9 +21,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGetOverviewQuery } from "@/redux/api/adminApi";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -128,7 +123,7 @@ const formatDateForApi = (dateStr: string) => {
 };
 
 export default function DashboardPage() {
-  const [range, setRange] = useState("today");
+  const [range, setRange] = useState("last30days");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
