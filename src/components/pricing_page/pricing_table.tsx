@@ -1,6 +1,6 @@
 "use client";
 
-import { SearchX, SquarePen, Trash2 } from "lucide-react";
+import { SearchX, SquarePen, Trash2, Pin, PinOff } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ import {
   useUpdateDestinationSatusMutation,
   useDeleteDestinationMutation,
   useGetDestinationsQuery,
+  usePinDestinationMutation,
 } from "@/redux/api/adminApi"; // adjust to your actual path
 
 // ── API-shaped destination type ────────────────────────────────
@@ -30,6 +31,7 @@ type Destination = {
   status: "active" | "disabled";
   createdAt: string;
   updatedAt: string;
+  pinnedAt?: string | null;
 };
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
@@ -76,6 +78,7 @@ const PricingTable = () => {
   const [updateStatus] = useUpdateDestinationSatusMutation();
   const [deleteDestination, { isLoading: isDeleting }] =
     useDeleteDestinationMutation();
+  const [pinDestination] = usePinDestinationMutation();
 
   const openEdit = (row: Destination) => {
     setEditRow(row);
@@ -163,8 +166,40 @@ const PricingTable = () => {
     }
   };
 
+  const handlePinToggle = async (row: Destination) => {
+    const isPinned = !!row.pinnedAt;
+    const newPinnedStatus = !isPinned;
+
+    const toastId = toast.loading(
+      newPinnedStatus ? "Pinning destination..." : "Unpinning destination...",
+    );
+    try {
+      await pinDestination({
+        id: row._id,
+        data: { pinned: newPinnedStatus },
+      }).unwrap();
+      toast.success(
+        newPinnedStatus ? "Destination pinned to top." : "Destination unpinned.",
+        { id: toastId },
+      );
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to update pin status.", {
+        id: toastId,
+      });
+    }
+  };
+
   const columns: DataTableColumn<Destination>[] = [
-    { key: "name", header: "Destination" },
+    { 
+      key: "name", 
+      header: "Destination",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <span>{row.name}</span>
+          {!!row.pinnedAt && <Pin className="size-4 text-destructive  fill-current" />}
+        </div>
+      )
+    },
     { key: "prefix", header: "Prefix", width: "120px" },
     {
       key: "customerRatePerMin",
@@ -203,6 +238,11 @@ const PricingTable = () => {
         <div className="flex justify-end gap-1">
           <DropdownMenu
             items={[
+              {
+                label: !!row.pinnedAt ? "Unpin" : "Pin to Top",
+                icon: !!row.pinnedAt ? PinOff : Pin,
+                onClick: () => handlePinToggle(row),
+              },
               {
                 label: "Edit details",
                 icon: SquarePen,

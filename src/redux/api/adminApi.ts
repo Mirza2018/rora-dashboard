@@ -270,9 +270,10 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: [tagTypes.destinations],
     }),
     pinDestination: build.mutation<Response, any>({
-      query: (id) => ({
-        url: `/destinations/admin/${id}/pin`,
+      query: (body) => ({
+        url: `/destinations/admin/${body.id}/pin`,
         method: "PATCH",
+        body:body.data
       }),
       invalidatesTags: [tagTypes.destinations],
     }),

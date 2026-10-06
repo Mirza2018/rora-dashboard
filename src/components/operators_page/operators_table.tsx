@@ -56,6 +56,7 @@ type Operator = {
   totalEarnings: number;
   availabilityStatus: "online" | "offline" | "busy";
   payouts?: OperatorPayout[];
+  invitationCode?: string;
 };
 
 const formatDate = (iso: string) => {
