@@ -36,8 +36,8 @@ const CustomersPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    countryCode: "+971",
-    countryName: "United Arab Emirates",
+    countryCode: "",
+    countryName: "",
     phone: "",
     password: "",
   });
@@ -100,8 +100,8 @@ const CustomersPage = () => {
         setIsModalOpen(false);
         setFormData({
           name: "",
-          countryCode: "+971",
-          countryName: "United Arab Emirates",
+          countryCode: "",
+          countryName: "",
           phone: "",
           password: "",
         });
