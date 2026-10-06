@@ -283,6 +283,14 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.operators],
     }),
+    getOperatorInformation: build.query<Response, any>({
+      query: (params) => ({
+        url: `/operator/admin/${params.id}/performance`,
+        method: "GET",
+        params: params.params,
+      }),
+      providesTags: [tagTypes.operators],
+    }),
     verifyOperator: build.mutation<Response, any>({
       query: (id) => ({
         url: `/operator/admin/${id}/verify`,
@@ -371,7 +379,7 @@ export const adminApi = baseApi.injectEndpoints({
     customerCreate: build.mutation<Response, any>({
       query: (body) => {
         console.log(body);
-        
+
         return {
           url: `/users/admin/create`,
           method: "POST",
@@ -453,6 +461,7 @@ export const {
   useActiveOperatorMutation,
   useGetInviteOperatorsQuery,
   useInviteOperatorMutation,
+  useLazyGetOperatorInformationQuery,
   ///
 
   useGetDistributorsQuery,

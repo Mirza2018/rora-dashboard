@@ -32,6 +32,7 @@ import {
   useActiveOperatorMutation,
 } from "@/redux/api/adminApi"; // adjust to your actual path
 import AllImages from "@/assets/AllImages";
+import { OperatorDetailsModal } from "./operator_details_modal";
 
 // ── API-shaped operator type ───────────────────────────────────
 type OperatorStatus = "active" | "suspended" | "pending_verification";
@@ -347,143 +348,10 @@ const OperatorsTable = () => {
       </main>
 
       {/* View details modal */}
-      <Modal
-        open={!!viewRow}
-        onClose={() => setViewRow(null)}
-        title="Operator Details"
-        description="Complete profile and performance overview"
-        footer={
-          <>
-            <Button variant="cancel" onClick={() => setViewRow(null)}>
-              Close
-            </Button>
-          </>
-        }
-      >
-        {viewRow && (
-          <>
-            <Card>
-              <CardHeader>
-                <CardDescription>
-                  <div className="flex justify-between items-center -my-3">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="size-16">
-                        <AvatarImage
-                          src={viewRow.image || AllImages.placeholder.src}
-                          alt={viewRow.name}
-                        />
-                        <AvatarFallback>
-                          {viewRow.name?.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-xl font-bold text-white">
-                          {viewRow.name}
-                        </p>
-                        <p className="text-xs">{viewRow._id.slice(-6)}</p>
-                        <p
-                          className={`text-xs mt-1 py-1 px-2.5 w-fit text-white rounded-md ${
-                            viewRow.status === "active"
-                              ? "bg-status-complete"
-                              : viewRow.status === "suspended"
-                                ? "bg-status-failed"
-                                : "bg-yellow-600"
-                          }`}
-                        >
-                          {viewRow.status.replace(/_/g, " ")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <p className="text-xs">Member Since</p>
-                      <p className="font-medium text-white">
-                        {formatDate(viewRow.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <div className="flex gap-4 ">
-              <div className="flex flex-1 items-center gap-2 border rounded-md p-2.5">
-                <Phone className="text-primary" />
-                <div>
-                  <p className="text-white text-xs">Phone</p>
-                  <p className="text-sm font-medium">{viewRow.phone}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-1 items-center gap-2 border rounded-md p-2.5">
-              <Building className="text-primary" />
-              <div>
-                <p className="text-white text-xs">City</p>
-                <p className="text-sm font-medium">{viewRow.city}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardDescription>
-                    <div className="flex flex-col justify-center items-center -my-3">
-                      <PhoneCall className="text-primary" size={36} />
-                      <p className="text-2xl font-bold text-white">
-                        {viewRow?.totalCalls}
-                      </p>
-                      <p className="text-xs">Calls</p>
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardDescription>
-                    <div className="flex flex-col justify-center items-center -my-3">
-                      <DollarSign className="text-status-complete" size={36} />
-                      <p className="text-2xl font-bold text-white">
-                        AED {viewRow?.totalEarnings.toFixed(2)}
-                      </p>
-                      <p className="text-xs">Revenue</p>
-                    </div>
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-white">
-                Monthly Payout History
-              </h4>
-              <div className="max-h-80 overflow-y-auto rounded-xl border border-card-border px-4 py-2 custom-scroll">
-                {viewRow.payouts?.length ? (
-                  viewRow.payouts.map((payout) => (
-                    <div
-                      key={payout._id}
-                      className="flex min-h-[60px] items-center justify-between gap-4 py-2"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card-border text-muted-foreground">
-                          <Banknote size={20} />
-                        </span>
-                        <p className="text-base font-medium text-foreground">
-                          {formatPayoutMonth(payout.createdAt)}
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-sm font-bold text-status-complete">
-                        AED {formatPayoutAmount(payout.amountMoney)}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
-                    No payout history available.
-                  </p>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </Modal>
+      <OperatorDetailsModal 
+        operatorId={viewRow?._id || null}
+        onClose={() => setViewRow(null)} 
+      />
 
       {/* Suspend confirmation modal */}
       <Modal
