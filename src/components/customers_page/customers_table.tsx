@@ -31,6 +31,7 @@ import {
   useMarkDistributorMutation,
   useSuspendCustomerMutation,
   useActiveCustomerMutation,
+  useGetCountriesQuery,
 } from "@/redux/api/adminApi"; // adjust to your actual path
 import AllImages from "@/assets/AllImages";
 
@@ -89,6 +90,9 @@ const CustomersTable = () => {
   const [commissionRate, setCommissionRate] = React.useState("");
   const [transferMinutes, setTransferMinutes] = React.useState("");
 
+  const { data: countriesResponse } = useGetCountriesQuery({});
+  const countries = countriesResponse?.data || [];
+
   const {
     data: response,
     isLoading,
@@ -97,6 +101,7 @@ const CustomersTable = () => {
     page,
     limit: 10,
     ...(statusFilter ? { status: statusFilter } : {}),
+    ...(countryFilter ? { country: countryFilter } : {}),
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
 
@@ -304,13 +309,22 @@ const CustomersTable = () => {
                 { label: "Suspended", value: "suspended" },
               ],
             },
+            {
+              key: "country",
+              placeholder: "Country",
+              value: countryFilter,
+              options: countries.map((c: any) => ({ label: c.name, value: c.name })),
+            },
           ]}
           onFilterChange={(key, value) => {
             if (key === "status") {
               setStatusFilter(value);
               setPage(1);
             }
-            if (key === "country") setCountryFilter(value);
+            if (key === "country") {
+              setCountryFilter(value);
+              setPage(1);
+            }
           }}
           pagination={{
             page,

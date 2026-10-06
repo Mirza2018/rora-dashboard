@@ -396,6 +396,14 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.operators],
     }),
+    ///Country and phone code list
+    getCountries: build.query<Response, any>({
+      query: () => ({
+        url: `/users/admin/countries`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.customers, tagTypes.operators],
+    }),
 
     // end
   }),
@@ -473,4 +481,7 @@ export const {
   //
   useCustomerCreateMutation,
   useOperatorCreateMutation,
+  //
+  useGetCountriesQuery,
+  useLazyGetCountriesQuery,
 } = adminApi;
