@@ -495,6 +495,146 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      {/* third Row Stats */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/*Total minute issued All time*/}
+        <Card className="bg-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardDescription>Total minute issued (All Time)</CardDescription>
+            <div className="p-2 bg-white/5 rounded-full text-gray-400">
+              <UserPlus className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <>
+                <CardTitle className="text-2xl font-bold">
+                  {(
+                    data?.minutesBalance?.allTime?.issued ?? 0
+                  ).toLocaleString()}
+                </CardTitle>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        {/* Total minute issued  Filter*/}
+        <Card className="bg-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardDescription>Total minute issued (Filter)</CardDescription>
+            <div className="p-2 bg-white/5 rounded-full text-gray-400">
+              <UserPlus className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <>
+                <CardTitle className="text-2xl font-bold">
+                  {(
+                    data?.minutesBalance?.rangeScoped?.issued ?? 0
+                  ).toLocaleString()}
+                </CardTitle>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        {/*Total minute Consumed All time*/}
+        <Card className="bg-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardDescription>Total minute consumed (All Time)</CardDescription>
+            <div className="p-2 bg-white/5 rounded-full text-gray-400">
+              <UserPlus className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <>
+                <CardTitle className="text-2xl font-bold">
+                  {(
+                    data?.minutesBalance?.allTime?.consumed ?? 0
+                  ).toLocaleString()}
+                </CardTitle>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        {/* Total minute Consumed  Filter*/}
+        <Card className="bg-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardDescription>Total minute consumed (Filter)</CardDescription>
+            <div className="p-2 bg-white/5 rounded-full text-gray-400">
+              <UserPlus className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <>
+                <CardTitle className="text-2xl font-bold">
+                  {(
+                    data?.minutesBalance?.rangeScoped?.consumed ?? 0
+                  ).toLocaleString()}
+                </CardTitle>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      {/* Forth Row Stats */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/*Total minute remaining All time*/}
+        <Card className="bg-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardDescription>
+              Total minute remaining (All Time)
+            </CardDescription>
+            <div className="p-2 bg-white/5 rounded-full text-gray-400">
+              <UserPlus className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <>
+                <CardTitle className="text-2xl font-bold">
+                  {(
+                    data?.minutesBalance?.allTime?.remaining ?? 0
+                  ).toLocaleString()}
+                </CardTitle>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        {/* Total minute issued  Filter*/}
+        <Card className="bg-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardDescription>Total minute remaining (Filter)</CardDescription>
+            <div className="p-2 bg-white/5 rounded-full text-gray-400">
+              <UserPlus className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-20 mt-1" />
+            ) : (
+              <>
+                <CardTitle className="text-2xl font-bold">
+                  {(
+                    data?.minutesBalance?.rangeScoped?.closing ?? 0
+                  ).toLocaleString()}
+                </CardTitle>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
