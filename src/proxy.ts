@@ -49,8 +49,6 @@ export function proxy(request: NextRequest) {
   // Get token
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
 
-
-
   // No token → sign in
   if (!accessToken) {
     return redirectToSignIn(request);
@@ -59,7 +57,7 @@ export function proxy(request: NextRequest) {
   try {
     const decoded = jwtDecode<JwtPayload>(accessToken);
 
-    // console.log("Decoded token:", decoded);
+    console.log("Decoded token:", decoded);
 
     // Token expired
     if (decoded.exp && decoded.exp * 1000 < Date.now()) {

@@ -15,7 +15,7 @@ import {
   Tag,
   UserCog,
   UserRoundPlus,
-  Users
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -93,7 +93,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
-const cookies = new Cookies();
+  const cookies = new Cookies();
   // Inline expand/collapse for the tree when the sidebar itself is expanded.
   const settingsActive = isItemActive(
     pathname,
@@ -149,20 +149,19 @@ const cookies = new Cookies();
 
   const flyoutItem = NAV_ITEMS.find((i) => i.label === flyoutFor) ?? null;
 
-  const userInfo:any = useSelector((state: RootState) => state.auth.userInfo);
+  const userInfo: any = useSelector((state: RootState) => state.auth.userInfo);
 
- 
-const getInitials = (name?: string) => {
-  if (!name) return "TA";
-  const parts = name.trim().split(/\s+/);
-  const initials = parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "");
-  return initials.join("") || "TA";
-};
+  const getInitials = (name?: string) => {
+    if (!name) return "TA";
+    const parts = name.trim().split(/\s+/);
+    const initials = parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "");
+    return initials.join("") || "TA";
+  };
 
   const handleLogout = () => {
+    cookies.remove("rora_dashboard_accessToken", { path: "/" });
     dispatch(clearAuth());
     router.push("/sign-in");
-    cookies.remove("rora_dashboard_accessToken");
   };
 
   return (
