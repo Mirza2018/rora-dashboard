@@ -381,7 +381,7 @@ export const adminApi = baseApi.injectEndpoints({
     updatePolicyAndHelp: build.mutation<Response, any>({
       query: (body) => ({
         url: `/admin/policy/${body.type}`,
-        method: "POST",
+        method: "PATCH",
         body: body.data,
       }),
       invalidatesTags: [tagTypes.policy],
