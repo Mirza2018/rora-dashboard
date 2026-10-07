@@ -12,6 +12,7 @@ import {
   Wallet,
   PackageCheck,
   XCircle,
+  CircleOff,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -32,6 +33,8 @@ const statusBadgeVariants = cva(
         failed:
           "bg-status-failed/10 text-status-failed border-status-failed/30",
         cancelled:
+          "bg-status-failed/10 text-status-failed border-status-failed/30",
+        dropped:
           "bg-status-failed/10 text-status-failed border-status-failed/30",
 
         pending:
@@ -85,6 +88,7 @@ const statusIcons = {
   reject: XCircle,
   paid: Wallet,
   delivered: PackageCheck,
+  dropped: CircleOff ,
 } as const;
 
 type Status = keyof typeof statusIcons;

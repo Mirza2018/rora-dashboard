@@ -34,6 +34,7 @@ type Call = {
   operatorId?: { _id: string; name: string; phone: string };
   numberDialed: string;
   status: CallStatus;
+  displayStatus: CallStatus;
   requestedAt: string;
   createdAt: string;
   endedAt?: string;
@@ -69,6 +70,7 @@ const DAYS_OPTIONS = [
 // variants StatusBadge actually supports.
 const statusBadgeMap: Record<CallStatus, string> = {
   requested: "pending",
+  dropped: "failed",
   assigned: "pending",
   dialing_customer: "pending",
   customer_connected: "pending",
@@ -78,7 +80,6 @@ const statusBadgeMap: Record<CallStatus, string> = {
   completed: "complete",
   failed: "failed",
   cancelled: "cancelled",
-  dropped: "failed",
 };
 
 const formatDate = (iso: string) => {
@@ -211,8 +212,8 @@ const CallsTable = () => {
       key: "status",
       header: "Status",
       render: (row) => (
-        <StatusBadge status={statusBadgeMap[row.status] as any}>
-          {row.status.replace(/_/g, " ")}
+        <StatusBadge status={statusBadgeMap[row?.displayStatus] as any}>
+          {row.displayStatus.replace(/_/g, " ")}
         </StatusBadge>
       ),
     },

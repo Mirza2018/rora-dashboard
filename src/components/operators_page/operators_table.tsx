@@ -1,37 +1,31 @@
 "use client";
 
 import {
-  Banknote,
-  Building,
-  DollarSign,
-  Eye,
-  Phone,
-  PhoneCall,
-  SearchX,
-  TriangleAlert,
-  RotateCcw,
   BadgeCheck,
+  Eye,
+  RotateCcw,
+  SearchX,
+  TriangleAlert
 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
+import AllImages from "@/assets/AllImages";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
+import {
+  useActiveOperatorMutation,
+  useGetOperatorsQuery,
+  useSuspendOperatorMutation,
+  useVerifyOperatorMutation,
+} from "@/redux/api/adminApi"; // adjust to your actual path
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Card, CardDescription, CardHeader } from "../ui/card";
+import { DropdownMenu } from "../ui/dropdown-menu";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { DropdownMenu } from "../ui/dropdown-menu";
-import {
-  useGetOperatorsQuery,
-  useVerifyOperatorMutation,
-  useSuspendOperatorMutation,
-  useActiveOperatorMutation,
-} from "@/redux/api/adminApi"; // adjust to your actual path
-import AllImages from "@/assets/AllImages";
 import { OperatorDetailsModal } from "./operator_details_modal";
 
 // ── API-shaped operator type ───────────────────────────────────
