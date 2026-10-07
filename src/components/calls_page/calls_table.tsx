@@ -424,8 +424,10 @@ const CallsTable = () => {
             <div className="flex justify-between items-center">
               <dt className="text-muted-foreground">Status</dt>
               <dd>
-                <StatusBadge status={statusBadgeMap[viewRow.status] as any}>
-                  {viewRow.status.replace(/_/g, " ")}
+                <StatusBadge
+                  status={statusBadgeMap[viewRow.displayStatus] as any}
+                >
+                  {viewRow.displayStatus.replace(/_/g, " ")}
                 </StatusBadge>
               </dd>
             </div>
